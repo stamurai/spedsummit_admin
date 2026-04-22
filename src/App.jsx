@@ -11173,18 +11173,19 @@ export default function App() {
       const sessionEntry = {
         id: newId, title: form.title, category: form.category || "SPED",
         instructor: form.instructorName || "", instructor_bio: form.bio || "",
-        duration: "60 mins", resources: 0, progress: 0, status: "not-started",
+        duration: "60 mins", resources: 0,
         description: form.desc || "", vimeo_url: form.vimeoUrl || "",
         available_from: form.availableFrom || null, available_to: form.availableTo || null,
         lessons,
       };
 
       // Push to Supabase so user site can see it
-      supabase.from("sessions").insert([sessionEntry]).then(({ error }) => {
-        if (error) console.error("Supabase insert error:", error.message);
+      supabase.from("sessions").insert([sessionEntry]).then(({ data, error }) => {
+        if (error) console.error("Supabase insert error:", error.message, error.details);
+        else console.log("Published to Supabase:", data);
       });
 
-      setSessions(prev => [...prev, { ...sessionEntry, instructorBio: form.bio || "", vimeoUrl: form.vimeoUrl || "" }]);
+      setSessions(prev => [...prev, { ...sessionEntry, instructorBio: form.bio || "", vimeoUrl: form.vimeoUrl || "", progress: 0, status: "not-started" }]);
       if (!form.availableFrom) setSpring2026Ids(prev => [...prev, newId]);
     }
   }
