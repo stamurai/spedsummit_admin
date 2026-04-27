@@ -5254,7 +5254,9 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                     <Icon name="pencil" size={13} color={C.gray500}/>
                   </button>
                   <button onClick={()=>onDeleteSession(s)} title="Delete session"
-                    style={{ width:28,height:28,borderRadius:8,border:`1px solid #fecaca`,background:"#fff5f5",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                    style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor="#fca5a5";e.currentTarget.style.background="rgba(239,68,68,0.08)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor=C.gray200;e.currentTarget.style.background=C.white;}}>
                     <Icon name="trash" size={13} color="#ef4444"/>
                   </button>
                 </div>
