@@ -5422,7 +5422,7 @@ function MiniBarChart48({ data }) {
   );
 }
 
-function AnalyticsPage({ onEditSession }) {
+function AnalyticsPage({ onEditSession, adminSessions = [] }) {
   const [range,     setRange]     = useState("28d");
   const [showRange, setShowRange] = useState(false);
 
@@ -5463,11 +5463,11 @@ function AnalyticsPage({ onEditSession }) {
   const stat  = STATS[range];
   const trend = TREND[range];
 
-  const TOP_SESSIONS = SESSIONS.slice(0, 4).map((s, i) => ({
+  const TOP_SESSIONS = adminSessions.slice(0, 4).map((s, i) => ({
     ...s,
-    avgDuration: ["18:24","14:52","22:10","8:45"][i],
-    avgPct:      ["78%","45%","91%","24%"][i],
-    views:       [850,410,320,240][i],
+    avgDuration: "—",
+    avgPct:      "—",
+    views:       0,
   }));
 
   const INSIGHTS = [
@@ -11114,7 +11114,7 @@ export default function App() {
   const { toasts, toast, remove } = useToast();
 
   /* ── Enrolled sessions (pre-seeded with sessions that have progress) ── */
-  const [enrolledIds, setEnrolledIds] = useState(new Set([1, 2, 3]));
+  const [enrolledIds, setEnrolledIds] = useState(new Set());
   const [userName, setUserName] = useState("Alex Johnson");
   const [scheduleRegistrations, setScheduleRegistrations] = useState({});
   const [sessionsDeepLink, setSessionsDeepLink] = useState(null);
@@ -11123,10 +11123,10 @@ export default function App() {
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [dashFilter, setDashFilter] = useState({ season:"all", year:"all" });
   const [adminSessions, setAdminSessions] = useState(() => {
-    try { const s = localStorage.getItem("adminSessions"); return s ? JSON.parse(s) : ADMIN_SESSIONS_DATA; } catch { return ADMIN_SESSIONS_DATA; }
+    try { const s = localStorage.getItem("adminSessions"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [sessions, setSessions] = useState(() => {
-    try { const s = localStorage.getItem("sessions"); return s ? JSON.parse(s) : SESSIONS; } catch { return SESSIONS; }
+    try { const s = localStorage.getItem("sessions"); return s ? JSON.parse(s) : []; } catch { return []; }
   });
   const [spring2026Ids, setSpring2026Ids] = useState(() => {
     try { return JSON.parse(localStorage.getItem("spring2026Ids") || "[]"); } catch { return []; }
@@ -11201,7 +11201,7 @@ export default function App() {
   }
 
   /* ── Quiz state: { [sessionId]: { status, score, currentQ, answers } } ── */
-  const [quizStates,        setQuizStates]        = useState({ 1: { status:"passed", score:92 } });
+  const [quizStates,        setQuizStates]        = useState({});
   const [assessmentSession, setAssessmentSession] = useState(null);
   const [certSession,       setCertSession]       = useState(null);
   const [reviewSession,     setReviewSession]     = useState(null);
@@ -11300,7 +11300,7 @@ export default function App() {
       if (page==="admin-sessions") return <AdminSessionsPage onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions} setAdminSessions={setAdminSessions}/>;
       if (page==="admin-create") return <AdminCreateSession onBack={()=>nav("admin-sessions")} toast={toast} onSave={addAdminSession}/>;
       if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
-      if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit}/>;
+      if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} adminSessions={adminSessions}/>;
     }
     if (page==="past-season" && pastSeasonPageId) {
       const season = seasons.find(s => s.id === pastSeasonPageId);
