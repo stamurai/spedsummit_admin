@@ -8267,7 +8267,7 @@ function AdminLandingPage({ onGetStarted }) {
               <input
                 type="email" placeholder="admin@spedsummit.com" value={email}
                 onChange={e => setEmail(e.target.value)} required
-                style={{ width:"100%", padding:"10px 12px", border:"1px solid #e2e8f0", borderRadius:8, fontSize:14, color:"#0f172a", outline:"none", boxSizing:"border-box", fontFamily:"inherit", transition:"border-color .15s" }}
+                style={{ width:"100%", padding:"10px 12px", border:"1px solid #e2e8f0", borderRadius:8, fontSize:14, color:"#0f172a", background:"#fff", outline:"none", boxSizing:"border-box", fontFamily:"inherit", transition:"border-color .15s" }}
                 onFocus={e => e.target.style.borderColor="#6490E8"}
                 onBlur={e => e.target.style.borderColor="#e2e8f0"}
               />
@@ -8277,7 +8277,7 @@ function AdminLandingPage({ onGetStarted }) {
               <input
                 type="password" placeholder="Enter your password" value={password}
                 onChange={e => setPassword(e.target.value)} required
-                style={{ width:"100%", padding:"10px 12px", border:"1px solid #e2e8f0", borderRadius:8, fontSize:14, color:"#0f172a", outline:"none", boxSizing:"border-box", fontFamily:"inherit", transition:"border-color .15s" }}
+                style={{ width:"100%", padding:"10px 12px", border:"1px solid #e2e8f0", borderRadius:8, fontSize:14, color:"#0f172a", background:"#fff", outline:"none", boxSizing:"border-box", fontFamily:"inherit", transition:"border-color .15s" }}
                 onFocus={e => e.target.style.borderColor="#6490E8"}
                 onBlur={e => e.target.style.borderColor="#e2e8f0"}
               />
