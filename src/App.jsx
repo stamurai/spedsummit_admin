@@ -5049,7 +5049,7 @@ function CertificationsPage({ quizStates = {}, enrolledIds = new Set(), onCertif
 /* ─────────────────────────────────────────────────────────────────────────────
    ADMIN OVERVIEW
 ───────────────────────────────────────────────────────────────────────────── */
-function AdminOverview({ onNavigate, onEditSession, toast }) {
+function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] }) {
   return (
     <div className="ao-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
@@ -5098,7 +5098,8 @@ function AdminOverview({ onNavigate, onEditSession, toast }) {
               View all <Icon name="caret-right" size={14} color={C.primary}/>
             </button>
           </div>
-          {ADMIN_SESSIONS_DATA.map((s,i,arr)=>{
+          {adminSessions.length === 0 && <div style={{ padding:"24px 0", textAlign:"center", color:C.gray400, fontSize:13 }}>No sessions yet.</div>}
+          {adminSessions.slice(0, 5).map((s,i,arr)=>{
             const sc = ADMIN_STATUS_COLORS[s.status] || ADMIN_STATUS_COLORS.DRAFT;
             return (
               <div key={s.id} className="ao-sess-row" style={{ borderBottom:i<arr.length-1?`1px solid ${C.gray100}`:"none" }}>
@@ -11303,7 +11304,7 @@ export default function App() {
       return <SessionDetail session={liveSession} onBack={()=>nav(isAdmin?"admin-sessions":sessionSource)} backLabel={sessionBackLabel} sessionSource={sessionSource} toast={toast} onAssessmentClick={handleAssessmentClick} onUpdateProgress={updateProgress}/>;
     }
     if (isAdmin) {
-      if (page==="admin-overview") return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast}/>;
+      if (page==="admin-overview") return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions}/>;
       if (page==="admin-sessions") return <AdminSessionsPage onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions} setAdminSessions={setAdminSessions} onDeleteSession={deleteSession}/>;
       if (page==="admin-create") return <AdminCreateSession onBack={()=>nav("admin-sessions")} toast={toast} onSave={addAdminSession}/>;
       if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
