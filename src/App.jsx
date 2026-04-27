@@ -5535,29 +5535,26 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
         }
       `}</style>
       {(() => {
-        const barData = range === "7d"
-          ? [{v:245,l:"M"},{v:312,l:"T"},{v:198,l:"W"},{v:400,l:"T"},{v:350,l:"F"},{v:190,l:"S"},{v:280,l:"S"}]
-          : range === "28d"
-          ? [{v:82,l:"W1"},{v:140,l:"W2"},{v:195,l:"W3"},{v:280,l:"W4"}]
-          : [{v:180,l:"Dec"},{v:260,l:"Jan"},{v:350,l:"Feb"},{v:420,l:"Mar"}];
-        const lineData = TREND[range];
-        const maxV = Math.max(...barData.map(d => d.v));
-        const maxL = Math.max(...lineData.map(d => d.v));
-        const minL = Math.min(...lineData.map(d => d.v));
+        const lineData = [];
+        const barData = [];
+        const hasData = lineData.length >= 2;
+        const maxV = hasData ? Math.max(...barData.map(d => d.v)) : 0;
+        const maxL = hasData ? Math.max(...lineData.map(d => d.v)) : 0;
+        const minL = hasData ? Math.min(...lineData.map(d => d.v)) : 0;
 
         const W = 600, H = 130, PAD = { t:16, r:8, b:28, l:36 };
         const cw = W - PAD.l - PAD.r;
         const ch = H - PAD.t - PAD.b;
-        const xOf = i => PAD.l + (i / (lineData.length - 1)) * cw;
+        const xOf = i => PAD.l + (lineData.length > 1 ? (i / (lineData.length - 1)) * cw : 0);
         const yOf = v => PAD.t + ch - ((v - minL) / (maxL - minL || 1)) * ch;
         const pts = lineData.map((d,i) => [xOf(i), yOf(d.v)]);
-        const pathD = pts.reduce((acc,[x,y],i) => {
+        const pathD = pts.length < 2 ? "" : pts.reduce((acc,[x,y],i) => {
           if (i === 0) return `M${x},${y}`;
           const [px,py] = pts[i-1];
           const cpx = (px+x)/2;
           return `${acc} C${cpx},${py} ${cpx},${y} ${x},${y}`;
         }, "");
-        const area = `${pathD} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
+        const area = pts.length < 2 ? "" : `${pathD} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
         const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({
           v: Math.round(minL + r*(maxL-minL)),
           y: PAD.t + ch - r*ch,
@@ -5575,8 +5572,9 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
               </div>
             </div>
 
+            {!hasData && <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:130, color:C.gray400, fontSize:13 }}>No view data yet — chart will appear once sessions are watched.</div>}
             {/* Desktop: line/area chart */}
-            <div className="aa-chart-desktop">
+            {hasData && <div className="aa-chart-desktop">
               <div className="aa-chart-stat" style={{ borderColor:C.gray100 }}>
                 <div style={{ fontSize:36, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{stat.views.toLocaleString()}</div>
                 <div style={{ fontSize:12, color:C.gray500, marginTop:4, fontWeight:500 }}>total views</div>
@@ -5612,10 +5610,10 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
                   ))}
                 </svg>
               </div>
-            </div>
+            </div>}
 
             {/* Mobile: bar chart */}
-            <div className="aa-chart-mobile">
+            {hasData && <div className="aa-chart-mobile">
               <div className="aa-chart-stat-m" style={{ borderColor:C.gray100 }}>
                 <div>
                   <div style={{ fontSize:30, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{stat.views.toLocaleString()}</div>
@@ -5639,7 +5637,7 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
                   );
                 })}
               </div>
-            </div>
+            </div>}
           </div>
         );
       })()}
