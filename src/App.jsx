@@ -4314,14 +4314,19 @@ function ProfileField({ label, children }) {
 /* ─────────────────────────────────────────────────────────────────────────────
    PROFILE PAGE
 ───────────────────────────────────────────────────────────────────────────── */
-function ProfilePage({ toast, userName = "Alex Johnson", onNameChange, onBack }) {
+function ProfilePage({ toast, userName = "", userEmail = "", userAvatar = null, onNameChange, onBack }) {
   const [activeSection, setActiveSection] = useState("personal");
-  const [form, setForm] = useState({ name:userName, title:"Special Education Teacher", email:"alex.johnson@school.edu", phone:"+1 (555) 123-4567", language:"English (US)" });
+  const [form, setForm] = useState({ name:userName, title:"", email:userEmail, phone:"", language:"English (US)" });
   const [notifEmail,   setNotifEmail]   = useState(true);
   const [notifMentor,  setNotifMentor]  = useState(true);
   const [publicProfile,setPublicProfile]= useState(false);
   const [twoFA,        setTwoFA]        = useState(true);
-  const [photoUrl,     setPhotoUrl]     = useState(null);
+  const [photoUrl,     setPhotoUrl]     = useState(userAvatar);
+
+  useEffect(() => {
+    setForm(f => ({ ...f, name: userName, email: userEmail }));
+    if (userAvatar) setPhotoUrl(userAvatar);
+  }, [userName, userEmail, userAvatar]);
 
   const photoInputRef = useRef(null);
 
@@ -5433,35 +5438,9 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
   ];
   const activeRange = RANGES.find(r => r.key === range);
 
-  const TREND = {
-    "7d": [
-      {v:245,label:"Mon"},{v:312,label:"Tue"},{v:198,label:"Wed"},
-      {v:400,label:"Thu"},{v:350,label:"Fri"},{v:190,label:"Sat"},{v:280,label:"Sun"},
-    ],
-    "28d": [
-      {v:82,label:"Feb 23"},{v:95,label:"Feb 24"},{v:140,label:"Feb 25"},{v:110,label:"Feb 26"},
-      {v:88,label:"Feb 27"},{v:75,label:"Feb 28"},{v:200,label:"Mar 1"},{v:180,label:"Mar 2"},
-      {v:145,label:"Mar 3"},{v:220,label:"Mar 4"},{v:195,label:"Mar 5"},{v:160,label:"Mar 6"},
-      {v:180,label:"Mar 7"},{v:210,label:"Mar 8"},{v:175,label:"Mar 9"},{v:140,label:"Mar 10"},
-      {v:310,label:"Mar 11"},{v:280,label:"Mar 12"},{v:240,label:"Mar 13"},{v:190,label:"Mar 14"},
-      {v:350,label:"Mar 15"},{v:320,label:"Mar 16"},{v:280,label:"Mar 17"},{v:240,label:"Mar 18"},
-      {v:190,label:"Mar 19"},{v:220,label:"Mar 20"},{v:260,label:"Mar 21"},{v:310,label:"Mar 22"},
-    ],
-    "90d": [
-      {v:180,label:"Dec 22"},{v:210,label:"Dec 29"},{v:240,label:"Jan 5"},
-      {v:280,label:"Jan 12"},{v:260,label:"Jan 19"},{v:300,label:"Jan 26"},
-      {v:320,label:"Feb 2"},{v:350,label:"Feb 9"},{v:380,label:"Feb 16"},
-      {v:360,label:"Feb 23"},{v:400,label:"Mar 1"},{v:420,label:"Mar 15"},{v:310,label:"Mar 22"},
-    ],
-  };
-
-  const STATS = {
-    "7d":  { views:4821,  watch:382,  completion:64, enrolled:12842, viewsDelta:"+12%", watchDelta:"+8%",  compDelta:"+5%"  },
-    "28d": { views:18200, watch:1430, completion:71, enrolled:12842, viewsDelta:"+18%", watchDelta:"+14%", compDelta:"+9%"  },
-    "90d": { views:54000, watch:4200, completion:76, enrolled:12842, viewsDelta:"+28%", watchDelta:"+22%", compDelta:"+15%" },
-  };
-  const stat  = STATS[range];
-  const trend = TREND[range];
+  const empty = { views:0, watch:0, completion:0, enrolled:adminSessions.length, viewsDelta:"—", watchDelta:"—", compDelta:"—" };
+  const stat  = empty;
+  const trend = [];
 
   const TOP_SESSIONS = adminSessions.slice(0, 4).map((s, i) => ({
     ...s,
@@ -5470,13 +5449,7 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
     views:       0,
   }));
 
-  const INSIGHTS = [
-    { icon:"trend-up",        title:"User activity up this week"                     },
-    { icon:"timer",           title:"Watch time drops on weekends"                   },
-    { icon:"check-circle",    title:`Completion at all-time high: ${stat.completion}%` },
-    { icon:"star",            title:"\"AI in SPED\" needs a push"                   },
-    { icon:"certificate",     title:"Certificate downloads up 18% vs last month"    },
-  ];
+  const INSIGHTS = [];
 
   return (
     <div className="aa-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
@@ -5674,6 +5647,7 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
             <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Duration</span>
             <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Views</span>
           </div>
+          {TOP_SESSIONS.length === 0 && <div style={{ textAlign:"center", padding:"24px 0", color:C.gray400, fontSize:13 }}>No sessions published yet.</div>}
           {TOP_SESSIONS.map((s,i) => {
             const grads = ["linear-gradient(135deg,#1e3a5f,#3699ff)","linear-gradient(135deg,#4c1d95,#a855f7)","linear-gradient(135deg,#166534,#50cd89)","linear-gradient(135deg,#7c2d12,#f97316)"];
             return (
@@ -5704,16 +5678,7 @@ function AnalyticsPage({ onEditSession, adminSessions = [] }) {
         {/* Smart Insights */}
         <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
           <h2 style={{ margin:"0 0 20px", fontSize:16, fontWeight:700, color:C.gray900, lineHeight:1.5 }}>Smart Insights</h2>
-          {INSIGHTS.map((ins,i) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0",
-              borderBottom:i<INSIGHTS.length-1?`1px solid ${C.gray100}`:"none" }}>
-              <div style={{ width:30, height:30, borderRadius:8, background:C.primaryLight,
-                display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <Icon name={ins.icon} size={14} color={C.primary}/>
-              </div>
-              <div style={{ fontSize:14, fontWeight:600, color:C.gray900, lineHeight:1.4 }}>{ins.title}</div>
-            </div>
-          ))}
+          <div style={{ textAlign:"center", padding:"24px 0", color:C.gray400, fontSize:13 }}>Insights will appear once sessions have views.</div>
         </div>
       </div>
     </div>
@@ -11114,6 +11079,20 @@ function LandingPageV2({ onGetStarted }) {
 ───────────────────────────────────────────────────────────────────────────── */
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem("loggedIn") === "1");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        const meta = session.user.user_metadata || {};
+        const name = meta.full_name || meta.name || session.user.email || "";
+        setUserName(name);
+        setUserEmail(session.user.email || "");
+        setUserAvatar(meta.avatar_url || meta.picture || null);
+        setIsLoggedIn(true);
+        sessionStorage.setItem("loggedIn", "1");
+      }
+    });
+  }, []);
   const [page, setPage] = useState(() => { const p = sessionStorage.getItem("page"); return (p && p.startsWith("admin")) ? p : "admin-overview"; });
   const [isAdmin] = useState(true);
   const [isDark, setIsDark] = useState(() => { const h = new Date().getHours(); return h >= 19 || h < 6; });
@@ -11126,7 +11105,9 @@ export default function App() {
 
   /* ── Enrolled sessions (pre-seeded with sessions that have progress) ── */
   const [enrolledIds, setEnrolledIds] = useState(new Set());
-  const [userName, setUserName] = useState("Alex Johnson");
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
   const [scheduleRegistrations, setScheduleRegistrations] = useState({});
   const [sessionsDeepLink, setSessionsDeepLink] = useState(null);
   const [pastSeasonPageId, setPastSeasonPageId] = useState(null);
@@ -11405,7 +11386,7 @@ export default function App() {
     if (page==="certifications") return <CertificationsPage quizStates={quizStates} enrolledIds={enrolledIds} onCertificateClick={handleCertificateClick} userName={userName}/>;
     if (page==="past-sessions")  return <PastSessionsTab onOpenSeason={(id) => { setPastSeasonPageId(id); setPastSeasonOrigin("past-sessions"); nav("past-season"); }} />;
     if (page==="notifications")  return <NotificationsPage />;
-    if (page==="profile")   return <ProfilePage toast={toast} userName={userName} onNameChange={setUserName} onBack={() => nav("dashboard")}/>;
+    if (page==="profile")   return <ProfilePage toast={toast} userName={userName} userEmail={userEmail} userAvatar={userAvatar} onNameChange={setUserName} onBack={() => nav("dashboard")}/>;
     return null;
   }
 
