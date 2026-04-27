@@ -5250,7 +5250,9 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                 </div>
                 <div style={{ display:"flex", gap:6, flexShrink:0 }}>
                   <button onClick={()=>onEditSession(s)} title="Edit session"
-                    style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                    style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor="#93c5fd";e.currentTarget.style.background="rgba(100,144,232,0.08)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor=C.gray200;e.currentTarget.style.background=C.white;}}>
                     <Icon name="pencil" size={13} color={C.gray500}/>
                   </button>
                   <button onClick={()=>onDeleteSession(s)} title="Delete session"
