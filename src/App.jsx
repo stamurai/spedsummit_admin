@@ -5075,10 +5075,10 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
       {/* Metrics */}
       <div className="ao-metrics">
         {[
-          {label:"Course Enrollments", val:"12,842", delta:"+15% vs prev"},
-          {label:"Student Rating",     val:"8.4/10", delta:"Top 1%"     },
-          {label:"Total Site Visits",  val:"83",     delta:"+23 today"  },
-          {label:"Total Revenue",      val:"$4,210", delta:"+8% vs prev"},
+          {label:"Sessions Published", val: adminSessions.filter(s=>s.status==="LIVE").length.toString(),  delta:"Live"},
+          {label:"Drafts",             val: adminSessions.filter(s=>s.status==="DRAFT").length.toString(), delta:"Unpublished"},
+          {label:"Total Sessions",     val: adminSessions.length.toString(),                               delta:"All time"},
+          {label:"Archived",           val: adminSessions.filter(s=>s.status==="ARCHIVED").length.toString(), delta:"Past"},
         ].map(m=>(
           <div key={m.label} style={{ background:C.white, borderRadius:12, border:`1px solid ${C.gray200}`, padding:"16px" }}>
             <span style={{ display:"inline-block", fontSize:11, fontWeight:700, color:C.gray500, background:C.gray200, padding:"2px 6px", borderRadius:6, marginBottom:6 }}>{m.delta}</span>
