@@ -8230,10 +8230,20 @@ function AuthModal({ onClose, onLogin }) {
 function AdminLandingPage({ onGetStarted }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
+    setLoading(true);
+    setError("");
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (authError) {
+      setError(authError.message);
+      return;
+    }
     onGetStarted(null, "admin");
   }
 
@@ -8275,11 +8285,12 @@ function AdminLandingPage({ onGetStarted }) {
             <div style={{ display:"flex", alignItems:"center", justifyContent:"flex-end" }}>
               <span style={{ fontSize:13, color:"#6490E8", cursor:"pointer", fontWeight:500 }}>Forgot password?</span>
             </div>
-            <button type="submit"
-              style={{ width:"100%", padding:"12px", borderRadius:8, border:"none", background:"#6490E8", color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"background .15s" }}
-              onMouseEnter={e => e.currentTarget.style.background="#4f7de0"}
+            {error && <div style={{ fontSize:13, color:"#ef4444", background:"#fef2f2", border:"1px solid #fecaca", borderRadius:7, padding:"8px 12px" }}>{error}</div>}
+            <button type="submit" disabled={loading}
+              style={{ width:"100%", padding:"12px", borderRadius:8, border:"none", background:"#6490E8", color:"#fff", fontSize:14, fontWeight:700, cursor:loading?"not-allowed":"pointer", fontFamily:"inherit", transition:"background .15s", opacity:loading?0.7:1 }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background="#4f7de0"; }}
               onMouseLeave={e => e.currentTarget.style.background="#6490E8"}>
-              Sign In
+              {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
         </div>
