@@ -11139,7 +11139,8 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem("adminSessions", JSON.stringify(adminSessions)); } catch {} }, [adminSessions]);
 
   async function addAdminSession(form, publish, sections) {
-    const newId = Date.now();
+    // Use a safe 9-digit ID that fits in a standard integer column
+    const newId = Math.floor(100000000 + Math.random() * 900000000);
     const dateLabel = form.availableFrom
       ? new Date(form.availableFrom).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
       : new Date().toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
@@ -11181,8 +11182,12 @@ export default function App() {
 
       // Push to Supabase so user site can see it
       supabase.from("sessions").insert([sessionEntry]).then(({ data, error }) => {
-        if (error) console.error("Supabase insert error:", error.message, error.details);
-        else console.log("Published to Supabase:", data);
+        if (error) {
+          console.error("[Supabase INSERT failed]", error.message, "| code:", error.code, "| hint:", error.hint, "| details:", error.details);
+          toast({ type:"error", title:"Publish failed", message:"Could not save to server: " + error.message });
+        } else {
+          console.log("[Supabase INSERT ok]", sessionEntry.id, sessionEntry.title);
+        }
       });
 
       setSessions(prev => [...prev, { ...sessionEntry, instructorBio: form.bio || "", vimeoUrl: form.vimeoUrl || "", progress: 0, status: "not-started" }]);
