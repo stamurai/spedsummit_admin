@@ -5148,7 +5148,7 @@ function AdminOverview({ onNavigate, onEditSession, toast }) {
 /* ─────────────────────────────────────────────────────────────────────────────
    ADMIN SESSIONS PAGE
 ───────────────────────────────────────────────────────────────────────────── */
-function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = ADMIN_SESSIONS_DATA, setAdminSessions }) {
+function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [], setAdminSessions, onDeleteSession }) {
   const [filter, setFilter] = useState("ALL");
   const statuses = ["ALL", "LIVE", "DRAFT", "ARCHIVED"];
   const filtered = filter === "ALL" ? adminSessions :
@@ -5253,9 +5253,9 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = A
                     style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
                     <Icon name="pencil" size={13} color={C.gray500}/>
                   </button>
-                  <button onClick={()=>toast({type:"info",message:"More options coming soon."})} aria-label="More options"
-                    style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                    <Icon name="dots-three-vertical" size={14} color={C.gray500}/>
+                  <button onClick={()=>onDeleteSession(s)} title="Delete session"
+                    style={{ width:28,height:28,borderRadius:8,border:`1px solid #fecaca`,background:"#fff5f5",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                    <Icon name="trash" size={13} color="#ef4444"/>
                   </button>
                 </div>
               </div>
@@ -11266,6 +11266,17 @@ export default function App() {
     });
   }
 
+  async function deleteSession(s) {
+    if (!window.confirm(`Delete "${s.title}"? This cannot be undone.`)) return;
+    // Remove from Supabase
+    const { error } = await supabase.from("sessions").delete().eq("id", s.id);
+    if (error) { toast({ type:"error", title:"Delete failed", message: error.message }); return; }
+    // Remove from local state
+    setAdminSessions(prev => prev.filter(a => a.id !== s.id));
+    setSessions(prev => prev.filter(u => u.id !== s.id));
+    toast({ type:"success", title:"Deleted", message:`"${s.title}" has been removed.` });
+  }
+
   function openSession(s, source) {
     setActiveSession(s);
     setSessionSource(source || page);
@@ -11289,7 +11300,7 @@ export default function App() {
     }
     if (isAdmin) {
       if (page==="admin-overview") return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast}/>;
-      if (page==="admin-sessions") return <AdminSessionsPage onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions} setAdminSessions={setAdminSessions}/>;
+      if (page==="admin-sessions") return <AdminSessionsPage onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions} setAdminSessions={setAdminSessions} onDeleteSession={deleteSession}/>;
       if (page==="admin-create") return <AdminCreateSession onBack={()=>nav("admin-sessions")} toast={toast} onSave={addAdminSession}/>;
       if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
       if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} adminSessions={adminSessions}/>;
