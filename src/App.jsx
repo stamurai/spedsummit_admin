@@ -5303,6 +5303,11 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
 
 function LineAreaChart({ data, color = C.primary }) {
   const [hov, setHov] = useState(null);
+  if (!data || data.length < 2) return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:200, color:C.gray400, fontSize:13 }}>
+      No data yet — views will appear here once sessions are watched.
+    </div>
+  );
   const W = 1000, H = 200, pL = 40, pR = 16, pT = 16, pB = 32;
   const iW = W - pL - pR, iH = H - pT - pB;
   const maxV = Math.max(...data.map(d => d.v), 1);
