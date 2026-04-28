@@ -6049,8 +6049,8 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
         {totalQuizzes === 0 && (
           <button onClick={()=>addFlatLesson("quiz")}
-            style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:`1.5px solid ${C.primary}`, borderRadius:8, background:C.white, fontSize:13, fontWeight:600, color:C.primary, cursor:"pointer" }}>
-            <Icon name="plus" size={12} color={C.primary}/> Add Assessment
+            style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:"none", borderRadius:8, background:C.primary, fontSize:13, fontWeight:600, color:"#fff", cursor:"pointer" }}>
+            <Icon name="plus" size={12} color="#fff"/> Add Assessment
           </button>
         )}
         <button onClick={()=>addMaterialWithFile(null)}
