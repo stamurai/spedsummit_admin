@@ -6114,9 +6114,10 @@ function AdminCreateSession({ onBack, toast, onSave }) {
     </div>
   );
 
-  function save(publish=false) {
+  async function save(publish=false) {
     if (!form.title.trim()) { toast({ type:"error", title:"Title required", message:"Please add a session title before saving." }); return; }
-    onSave && onSave(form, publish, sectionsRef.current);
+    const ok = await (onSave && onSave(form, publish, sectionsRef.current));
+    if (ok === false) return;
     if (publish) { toast({ type:"success", title:"Session published! 🚀", message:`"${form.title}" is now live.` }); }
     else { toast({ type:"info", title:"Draft saved", message:`"${form.title}" saved as draft.` }); }
     setTimeout(onBack, 800);
@@ -6449,10 +6450,10 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
     setQuestions(qs => qs.filter(q => q.id!==id));
   }
 
-  function save() {
+  async function save() {
     if (!form.title.trim()) { toast({ type:"error", title:"Title required", message:"Please add a session title before saving." }); return; }
-    if (onSave) onSave(session.id, form, sectionsRef.current);
-    toast({ type:"success", title:"Changes saved", message:`"${form.title}" has been updated.` });
+    const ok = await (onSave && onSave(session.id, form, sectionsRef.current));
+    if (ok === false) return;
     setTimeout(onBack, 1200);
   }
 
@@ -11232,10 +11233,11 @@ export default function App() {
       if (error) {
         console.error("[Supabase INSERT failed]", error.message);
         toast({ type:"error", title:"Publish failed", message:"Could not save to server: " + error.message });
-        return;
+        return false;
       }
       fetchSessions();
     }
+    return true;
   }
 
   function enroll(sessionId) {
@@ -11306,7 +11308,9 @@ export default function App() {
     supabase.from("sessions").update(update).eq("id", id).then(({ error }) => {
       if (error) { toast({ type:"error", title:"Update failed", message: error.message }); return; }
       fetchSessions();
+      toast({ type:"success", title:"Changes saved", message:`"${form.title}" has been updated.` });
     });
+    return true;
   }
 
   async function deleteSession(s) {
