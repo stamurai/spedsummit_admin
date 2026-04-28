@@ -11137,21 +11137,53 @@ export default function App() {
   const [pastSeasonOrigin, setPastSeasonOrigin] = useState("browse");
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [dashFilter, setDashFilter] = useState({ season:"all", year:"all" });
-  const [adminSessions, setAdminSessions] = useState(() => {
-    try { const s = localStorage.getItem("adminSessions"); return s ? JSON.parse(s) : []; } catch { return []; }
-  });
-  const [sessions, setSessions] = useState(() => {
-    try { const s = localStorage.getItem("sessions"); return s ? JSON.parse(s) : []; } catch { return []; }
-  });
-  const [spring2026Ids, setSpring2026Ids] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("spring2026Ids") || "[]"); } catch { return []; }
-  });
+  const [adminSessions, setAdminSessions] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [spring2026Ids, setSpring2026Ids] = useState([]);
   useEffect(() => { localStorage.setItem("spring2026Ids", JSON.stringify(spring2026Ids)); }, [spring2026Ids]);
   // Merged seasons — Spring 2026 gets any newly created sessions without a date
   const seasons = SEASONS.map(s => s.id === "spring-2026" ? { ...s, sessionIds: [...s.sessionIds, ...spring2026Ids] } : s);
 
-  useEffect(() => { try { localStorage.setItem("sessions", JSON.stringify(sessions)); } catch {} }, [sessions]);
-  useEffect(() => { try { localStorage.setItem("adminSessions", JSON.stringify(adminSessions)); } catch {} }, [adminSessions]);
+  const fetchSessions = useCallback(() => {
+    supabase.from("sessions").select("*").then(({ data, error }) => {
+      if (error) { console.error("[Supabase] fetch error:", error.message); return; }
+      const rows = data || [];
+      const toSession = s => ({
+        id: s.id, title: s.title, category: s.category,
+        instructor: s.instructor || "", instructorBio: s.instructor_bio || "",
+        duration: s.duration || "60 mins", resources: s.resources || 0,
+        progress: 0, status: "not-started",
+        description: s.description || "",
+        vimeoUrl: s.vimeo_url || "",
+        lessons: s.lessons || [],
+        availableFrom: s.available_from || null,
+        availableTo: s.available_to || null,
+      });
+      setSessions(rows.map(toSession));
+      setAdminSessions(rows.map(s => ({
+        id: s.id, title: s.title, category: s.category,
+        status: "LIVE",
+        date: s.available_from
+          ? new Date(s.available_from).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
+          : new Date(s.created_at || Date.now()).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }),
+        enrolled: 0,
+        availableFrom: s.available_from || "",
+        availableTo: s.available_to || "",
+        instructor: s.instructor || "",
+        vimeoUrl: s.vimeo_url || "",
+        desc: s.description || "",
+      })));
+      setSpring2026Ids(rows.filter(s => !s.available_from).map(s => s.id));
+    });
+  }, []);
+
+  useEffect(() => {
+    fetchSessions();
+    const onVisible = () => { if (document.visibilityState === "visible") fetchSessions(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const interval = setInterval(fetchSessions, 30000);
+    return () => { document.removeEventListener("visibilitychange", onVisible); clearInterval(interval); };
+  }, [fetchSessions]);
 
   async function addAdminSession(form, publish, sections) {
     // Use a safe 9-digit ID that fits in a standard integer column
@@ -11195,18 +11227,14 @@ export default function App() {
         lessons,
       };
 
-      // Push to Supabase so user site can see it
-      supabase.from("sessions").insert([sessionEntry]).then(({ data, error }) => {
-        if (error) {
-          console.error("[Supabase INSERT failed]", error.message, "| code:", error.code, "| hint:", error.hint, "| details:", error.details);
-          toast({ type:"error", title:"Publish failed", message:"Could not save to server: " + error.message });
-        } else {
-          console.log("[Supabase INSERT ok]", sessionEntry.id, sessionEntry.title);
-        }
-      });
-
-      setSessions(prev => [...prev, { ...sessionEntry, instructorBio: form.bio || "", vimeoUrl: form.vimeoUrl || "", progress: 0, status: "not-started" }]);
-      if (!form.availableFrom) setSpring2026Ids(prev => [...prev, newId]);
+      // Push to Supabase then re-fetch so all devices see it immediately
+      const { error } = await supabase.from("sessions").insert([sessionEntry]);
+      if (error) {
+        console.error("[Supabase INSERT failed]", error.message);
+        toast({ type:"error", title:"Publish failed", message:"Could not save to server: " + error.message });
+        return;
+      }
+      fetchSessions();
     }
   }
 
@@ -11269,15 +11297,6 @@ export default function App() {
           questions: l.questions || [],
         })))
       : undefined;
-    setSessions(prev => prev.map(s => s.id === id ? {
-      ...s, title: form.title, category: form.category, instructor: form.instructorName,
-      instructorBio: form.bio, description: form.desc, vimeoUrl: form.vimeoUrl,
-      availableFrom: form.availableFrom, availableTo: form.availableTo,
-      ...(updatedLessons ? { lessons: updatedLessons } : {}),
-    } : s));
-    setAdminSessions(prev => prev.map(s => s.id === id ? { ...s, title: form.title, category: form.category, instructor: form.instructorName, vimeoUrl: form.vimeoUrl, availableFrom: form.availableFrom, availableTo: form.availableTo } : s));
-
-    // Sync edits to Supabase
     const update = {
       title: form.title, category: form.category, instructor: form.instructorName,
       instructor_bio: form.bio, description: form.desc, vimeo_url: form.vimeoUrl,
@@ -11285,19 +11304,17 @@ export default function App() {
       ...(updatedLessons ? { lessons: updatedLessons } : {}),
     };
     supabase.from("sessions").update(update).eq("id", id).then(({ error }) => {
-      if (error) console.error("Supabase update error:", error.message);
+      if (error) { toast({ type:"error", title:"Update failed", message: error.message }); return; }
+      fetchSessions();
     });
   }
 
   async function deleteSession(s) {
     if (!window.confirm(`Delete "${s.title}"? This cannot be undone.`)) return;
-    // Remove from Supabase
     const { error } = await supabase.from("sessions").delete().eq("id", s.id);
     if (error) { toast({ type:"error", title:"Delete failed", message: error.message }); return; }
-    // Remove from local state
-    setAdminSessions(prev => prev.filter(a => a.id !== s.id));
-    setSessions(prev => prev.filter(u => u.id !== s.id));
     toast({ type:"success", title:"Deleted", message:`"${s.title}" has been removed.` });
+    fetchSessions();
   }
 
   function openSession(s, source) {
