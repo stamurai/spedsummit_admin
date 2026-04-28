@@ -5900,7 +5900,15 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
       {/* Lesson / Quiz cards */}
       {nonMaterialLessons.map((l, li) => (
         <div key={l.id} style={{ marginBottom:16 }}>
-          <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>{l.type==="quiz"?"Assessment":"Lesson"}</div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase" }}>{l.type==="quiz"?"Assessment":"Lesson"}</div>
+            {l.type==="quiz" && (
+              <button onClick={()=>deleteFlatLesson(l._secId,l.id)}
+                style={{ width:28,height:28,borderRadius:7,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                <Icon name="trash" size={13} color={C.error}/>
+              </button>
+            )}
+          </div>
           <div style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
 
           <Label>TITLE</Label>
@@ -6039,10 +6047,12 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
 
       {/* Bottom action buttons */}
       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-        <button onClick={()=>addFlatLesson("quiz")}
-          style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:`1.5px solid ${C.primary}`, borderRadius:8, background:C.white, fontSize:13, fontWeight:600, color:C.primary, cursor:"pointer" }}>
-          <Icon name="plus" size={12} color={C.primary}/> Add Assessment
-        </button>
+        {totalQuizzes === 0 && (
+          <button onClick={()=>addFlatLesson("quiz")}
+            style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:`1.5px solid ${C.primary}`, borderRadius:8, background:C.white, fontSize:13, fontWeight:600, color:C.primary, cursor:"pointer" }}>
+            <Icon name="plus" size={12} color={C.primary}/> Add Assessment
+          </button>
+        )}
         <button onClick={()=>addMaterialWithFile(null)}
           style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:"none", borderRadius:8, background:C.primary, fontSize:13, fontWeight:600, color:"#fff", cursor:"pointer" }}>
           <Icon name="plus" size={12} color="#fff"/> Add Material
