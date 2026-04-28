@@ -5731,7 +5731,6 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
     if (initialSections && initialSections.length) return initialSections;
     return [{ id:1, title:"Introduction", collapsed:false, resources:[], lessons:[
       { id:101, title:"Welcome & course overview", type:"video", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
-      { id:102, title:"New Quiz", type:"quiz", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
     ]}];
   });
 
@@ -6038,11 +6037,17 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
         </div>
       ))}
 
-      {/* Add material button */}
-      <button onClick={()=>addMaterialWithFile(null)}
-        style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:"none", borderRadius:8, background:C.primary, fontSize:13, fontWeight:600, color:"#fff", cursor:"pointer" }}>
-        <Icon name="plus" size={12} color="#fff"/> Add Material
-      </button>
+      {/* Bottom action buttons */}
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+        <button onClick={()=>addFlatLesson("quiz")}
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:`1.5px solid ${C.primary}`, borderRadius:8, background:C.white, fontSize:13, fontWeight:600, color:C.primary, cursor:"pointer" }}>
+          <Icon name="plus" size={12} color={C.primary}/> Add Assessment
+        </button>
+        <button onClick={()=>addMaterialWithFile(null)}
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:"none", borderRadius:8, background:C.primary, fontSize:13, fontWeight:600, color:"#fff", cursor:"pointer" }}>
+          <Icon name="plus" size={12} color="#fff"/> Add Material
+        </button>
+      </div>
     </div>
   );
 }
