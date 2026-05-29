@@ -3912,6 +3912,7 @@ export default function App() {
   }
 
   async function addAdminSession(form, publish, sections) {
+    const newId = Date.now();
     const lessons = sections && sections.length
       ? sections.flatMap(sec => sec.lessons.map(l => ({
           sectionTitle: sec.title, title: l.title,
@@ -3922,7 +3923,7 @@ export default function App() {
       : [{ sectionTitle:"Session", title:"Full Session", duration:"60:00", status: publish ? "available" : "draft", type:"video", vimeoUrl: form.vimeoUrl || "" }];
 
     const supabaseEntry = {
-      title: form.title, category: form.category || "SPED",
+      id: newId, title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
       duration: "60 mins",
       description: form.desc || "", vimeo_url: form.vimeoUrl || "",
