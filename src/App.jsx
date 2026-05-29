@@ -1957,7 +1957,7 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
         const minL = Math.min(...lineData.map(d => d.v));
 
         /* SVG line/area chart helpers */
-        const W = 600, H = 130, PAD = { t:16, r:8, b:28, l:28 };
+        const W = 600, H = 130, PAD = { t:16, r:4, b:28, l:4 };
         const cw = W - PAD.l - PAD.r;
         const ch = H - PAD.t - PAD.b;
         const xOf = i => PAD.l + (i / (lineData.length - 1)) * cw;
@@ -2012,10 +2012,7 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
                   </defs>
                   {/* Grid lines */}
                   {yTicks.map((t,i) => (
-                    <g key={i}>
-                      <line x1={PAD.l} y1={t.y} x2={W-PAD.r} y2={t.y} stroke={C.gray100} strokeWidth="1"/>
-                      <text x={PAD.l-6} y={t.y+4} textAnchor="end" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{t.v >= 1000 ? `${(t.v/1000).toFixed(t.v%1000===0?0:1)}k` : t.v}</text>
-                    </g>
+                    <line key={i} x1={PAD.l} y1={t.y} x2={W-PAD.r} y2={t.y} stroke={C.gray100} strokeWidth="1"/>
                   ))}
                   {/* Area fill */}
                   <path d={area} fill="url(#aa-grad)"/>
