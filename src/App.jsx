@@ -2784,15 +2784,16 @@ function AdminCreateSession({ onBack, toast, onSave }) {
 
       </div>
 
+    {/* Single CurriculumBuilder instance — shown/hidden by CSS, never unmounts */}
+    <div style={{ display: tab === "curriculum" ? "block" : "none", position:"absolute", top:0, left:0, right:0, bottom:0, pointerEvents: tab === "curriculum" ? "auto" : "none", zIndex: tab === "curriculum" ? 1 : -1, overflow:"auto" }}>
+      <CurriculumBuilder toast={toast} initialSections={sections} onSectionsChange={handleSectionsChange}/>
+    </div>
+
     {showDiscard && <DiscardModal onDiscard={onBack} onKeep={() => setShowDiscard(false)}/>}
     </div>
   );
 
   function renderTabContent() { return (<>
-            {/* CurriculumBuilder always rendered (never unmounts) — hidden via display when not active */}
-            <div style={{ display: tab === "curriculum" ? "block" : "none" }}>
-              <CurriculumBuilder toast={toast} initialSections={sections} onSectionsChange={handleSectionsChange}/>
-            </div>
             {/* ── SESSION DETAILS tab ── */}
             {tab === "details" && <>
               {/* Session Info card */}
