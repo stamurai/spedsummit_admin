@@ -2648,7 +2648,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
   const [form, setForm] = useState({
     title:"", category:"SPED", lang:"English", desc:"",
     availableFrom:"", availableTo:"",
-    instructorName:"", bio:"",
+    instructorName:"", bio:"", linkedin:"", twitter:"",
     vimeoUrl:"",
     discussion:true, qa:true, spinWheel:false, certificate:false, commentVisibility:"visible",
   });
@@ -2888,9 +2888,9 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <Label>PROFESSIONAL BIO</Label>
                 <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={2} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
                 <Label>LINKEDIN</Label>
-                <input placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
+                <input value={form.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
                 <Label>X (TWITTER)</Label>
-                <input placeholder="X handle" style={inputSt}/>
+                <input value={form.twitter} onChange={e=>upd("twitter",e.target.value)} placeholder="X handle" style={inputSt}/>
                 </div>
               </div>
 
@@ -2977,7 +2977,9 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
     availableFrom:  session.availableFrom  || "",
     availableTo:    session.availableTo    || "",
     instructorName: session.instructor     || "",
-    bio:            session.bio            || "",
+    bio:            session.instructorBio  || session.bio || "",
+    linkedin:       session.linkedin       || "",
+    twitter:        session.twitter        || "",
     vimeoUrl:       session.vimeoUrl       || "",
     discussion:     session.discussion !== undefined ? session.discussion : true,
     qa:             session.qa         !== undefined ? session.qa         : true,
@@ -3251,9 +3253,9 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                   <Label>PROFESSIONAL BIO</Label>
                   <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={2} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
                   <Label>LINKEDIN</Label>
-                  <input placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
+                  <input value={form.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
                   <Label>X (TWITTER)</Label>
-                  <input placeholder="X handle" style={inputSt}/>
+                  <input value={form.twitter} onChange={e=>upd("twitter",e.target.value)} placeholder="X handle" style={inputSt}/>
                 </div>
               </div>
 
@@ -3828,6 +3830,7 @@ export default function App() {
       const toSession = s => ({
         id: s.id, title: s.title, category: s.category,
         instructor: s.instructor || "", instructorBio: s.instructor_bio || "",
+        linkedin: s.linkedin || "", twitter: s.twitter || "",
         duration: s.duration || "60 mins", resources: s.resources || 0,
         progress: 0, status: "not-started",
         description: s.description || "",
@@ -4000,6 +4003,7 @@ export default function App() {
     const supabaseEntry = {
       id: newId, title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
+      linkedin: form.linkedin || "", twitter: form.twitter || "",
       duration: "60 mins",
       description: form.desc || "", vimeo_url: form.vimeoUrl || "",
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
@@ -4030,6 +4034,7 @@ export default function App() {
     const supabaseUpdate = {
       title: form.title, category: form.category,
       instructor: form.instructorName, instructor_bio: form.bio,
+      linkedin: form.linkedin || "", twitter: form.twitter || "",
       description: form.desc, vimeo_url: form.vimeoUrl,
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
       ...(updatedLessons ? { lessons: updatedLessons } : {}),
