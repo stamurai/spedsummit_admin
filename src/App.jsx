@@ -3928,9 +3928,6 @@ export default function App() {
       description: form.desc || "", vimeo_url: form.vimeoUrl || "",
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
       lessons,
-      resources: sections ? sections.flatMap(sec => (sec.resources || []).map(r => ({
-        title: r.title, type: r.type, size: r.size, icon: r.icon, url: r.url,
-      }))) : [],
     };
 
     console.log("[addAdminSession] inserting:", supabaseEntry);
