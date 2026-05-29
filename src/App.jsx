@@ -3775,10 +3775,8 @@ export default function App() {
       setSessionsLoading(false);
 
       setAdminSessions(rows.map(s => {
-        const storedStatus = (s.status || "").toUpperCase();
         const state = getSessionState({ available_from: s.available_from, available_to: s.available_to });
-        const derivedStatus = state === "live" ? "LIVE" : state === "past" ? "ARCHIVED" : "DRAFT";
-        const statusLabel = ["LIVE","DRAFT","ARCHIVED"].includes(storedStatus) ? storedStatus : derivedStatus;
+        const statusLabel = state === "live" ? "LIVE" : state === "past" ? "ARCHIVED" : "DRAFT";
         const dateLabel = s.available_from
           ? new Date(s.available_from).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
           : "";
@@ -3927,7 +3925,7 @@ export default function App() {
     const supabaseEntry = {
       id: newId, title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
-      duration: "60 mins", status: publish ? "LIVE" : "DRAFT",
+      duration: "60 mins",
       description: form.desc || "", vimeo_url: form.vimeoUrl || "",
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
       lessons,
