@@ -1450,7 +1450,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
         }
       `}</style>
       <div style={{ marginBottom:22 }}>
-        <h1 className="ao-h1" style={{ margin:0, fontWeight:700, color:C.gray900, letterSpacing:-0.3, lineHeight:1.25 }}>Overview</h1>
+        <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:C.gray900, letterSpacing:-0.3, lineHeight:1.25 }}>Overview</h1>
       </div>
 
       {/* Metrics */}
