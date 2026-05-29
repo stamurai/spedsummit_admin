@@ -1497,9 +1497,9 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
                     <span style={{ fontSize:12, color:C.gray500 }}>{s.date}</span>
                   </div>
                 </div>
-                <button onClick={() => onEditSession?.(s)} title="Edit session"
+                <button onClick={() => onEditSession?.(s)} title="More options"
                   style={{ width:26, height:26, borderRadius:7, border:`1px solid ${C.gray200}`, background:C.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  <Icon name="pencil" size={12} color={C.gray500}/>
+                  <Icon name="dots-three-vertical" size={13} color={C.gray500}/>
                 </button>
               </div>
             );
