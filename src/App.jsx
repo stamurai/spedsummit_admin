@@ -2357,10 +2357,9 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
 
           {/* Quiz questions — compact rows + inline edit panel */}
           {l.type==="quiz" && <>
-            <Label>QUESTIONS</Label>
             <div>
                 {l.questions.map((q, qi) => {
-                  const isEditing = editingQuestionId === q.id;
+                  const isEditing = qi === 0 || editingQuestionId === q.id;
                   const answerLetters = ["A","B","C","D","E","F"];
                   return (
                     <div key={q.id} style={{ marginBottom:8 }}>
