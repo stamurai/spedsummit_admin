@@ -67,6 +67,7 @@ const ICON_MAP = {
   "spinner-gap": PhosphorIcons.SpinnerGap,
   "pencil-simple": PhosphorIcons.PencilSimple,
   "archive-tray": PhosphorIcons.ArchiveTray,
+  "file-archive": PhosphorIcons.FileArchive,
   "file": PhosphorIcons.File,
   "arrow-fat-up": PhosphorIcons.ArrowFatUp,
   "arrow-fat-down": PhosphorIcons.ArrowFatDown,
@@ -1656,7 +1657,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                             { icon:"pencil-simple",  label:"Edit Session", action:()=>{ onEditSession(s); setMenuOpenId(null); } },
                             { icon: s.status==="LIVE" ? "file" : "play-circle", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
                               action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:s.status==="LIVE"?"DRAFT":"LIVE"}:x)); setMenuOpenId(null); } },
-                            { icon:"archive-tray",   label:"Archive", action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
+                            { icon:"file-archive",   label:"Archive", action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
                             { icon:"trash",          label:"Delete",  danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
                           ].map((item,idx,arr)=>(
                             <button key={item.label} onClick={item.action}
