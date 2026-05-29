@@ -1531,6 +1531,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
 ───────────────────────────────────────────────────────────────────────────── */
 function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [], setAdminSessions }) {
   const [filter, setFilter] = useState("ALL");
+  const [menuOpenId, setMenuOpenId] = useState(null);
   const statuses = ["ALL", "LIVE", "DRAFT", "ARCHIVED"];
   const filtered = filter === "ALL" ? adminSessions :
                    adminSessions.filter(s => s.status === filter);
@@ -1641,10 +1642,30 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                     style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
                     <Icon name="pencil" size={13} color={C.gray500}/>
                   </button>
-                  <button onClick={()=>toast({type:"info",message:"More options coming soon."})} aria-label="More options"
-                    style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                    <Icon name="dots-three-vertical" size={14} color={C.gray500}/>
-                  </button>
+                  <div style={{ position:"relative" }}>
+                    <button onClick={()=>setMenuOpenId(menuOpenId===s.id?null:s.id)} aria-label="More options"
+                      style={{ width:28,height:28,borderRadius:8,border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                      <Icon name="dots-three-vertical" size={14} color={C.gray500}/>
+                    </button>
+                    {menuOpenId===s.id && (
+                      <div style={{ position:"absolute", right:0, top:34, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 4px 20px rgba(0,0,0,0.10)", zIndex:100, minWidth:180, overflow:"hidden" }}>
+                        {[
+                          { icon:"pencil",       label:"Edit Session",    action:()=>{ onEditSession(s); setMenuOpenId(null); } },
+                          { icon:"copy",         label:"Duplicate",       action:()=>{ toast({type:"info",message:"Duplicate coming soon."}); setMenuOpenId(null); } },
+                          { icon: s.status==="LIVE" ? "pause-circle" : "play-circle", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
+                            action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:s.status==="LIVE"?"DRAFT":"LIVE"}:x)); setMenuOpenId(null); } },
+                          { icon:"archive",      label:"Archive",         action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
+                          { icon:"trash",        label:"Delete",          danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
+                        ].map((item,idx,arr)=>(
+                          <button key={item.label} onClick={item.action}
+                            style={{ display:"flex",alignItems:"center",gap:10,width:"100%",padding:"10px 14px",background:"none",border:"none",borderBottom:idx<arr.length-1?`1px solid ${C.gray100}`:"none",cursor:"pointer",fontSize:13,fontWeight:500,color:item.danger?C.error:C.gray700,textAlign:"left",fontFamily:"inherit" }}>
+                            <Icon name={item.icon} size={14} color={item.danger?C.error:C.gray500}/>
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
