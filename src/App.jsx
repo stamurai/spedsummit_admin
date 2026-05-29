@@ -1596,7 +1596,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
       )}
 
       {/* Sessions list */}
-      <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, overflow:"hidden" }}>
+      <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}` }}>
         {filtered.length === 0 && (
           <Empty style={{ margin:"8px 0" }}>
             <EmptyMedia variant="icon" color="#6490E8"><Icon name="funnel" size={22} color="#6490E8"/></EmptyMedia>
@@ -1650,7 +1650,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                     {menuOpenId===s.id && (
                       <>
                         <div onClick={()=>setMenuOpenId(null)} style={{ position:"fixed",inset:0,zIndex:199 }}/>
-                        <div style={{ position:"fixed", right:"auto", background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200, overflow:"hidden", marginTop:4 }}>
+                        <div style={{ position:"absolute", right:0, top:34, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200, overflow:"visible" }}>
                           {[
                             { icon:"pencil",       label:"Edit Session",    action:()=>{ onEditSession(s); setMenuOpenId(null); } },
                             { icon:"copy",         label:"Duplicate",       action:()=>{ toast({type:"info",message:"Duplicate coming soon."}); setMenuOpenId(null); } },
