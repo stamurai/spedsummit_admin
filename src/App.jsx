@@ -1721,7 +1721,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                 style={{ flex:1, padding:"10px 0", borderRadius:10, border:`1px solid ${C.gray200}`, background:C.white, color:C.gray700, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
                 Cancel
               </button>
-              <button onClick={()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==deleteConfirmId)); setDeleteConfirmId(null); }}
+              <button onClick={async ()=>{ await supabase.from("sessions").delete().eq("id", deleteConfirmId); setAdminSessions(prev=>prev.filter(x=>x.id!==deleteConfirmId)); setDeleteConfirmId(null); }}
                 style={{ flex:1, padding:"10px 0", borderRadius:10, border:"none", background:C.error, color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
                 Delete
               </button>
