@@ -1436,6 +1436,7 @@ function TabBar({ active, onChange, isAdmin, breadcrumbs }) {
 }
 
 function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] }) {
+  const [menuOpenId, setMenuOpenId] = useState(null);
   return (
     <div className="ao-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
@@ -1497,10 +1498,31 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
                     <span style={{ fontSize:12, color:C.gray500 }}>{s.date}</span>
                   </div>
                 </div>
-                <button onClick={() => onEditSession?.(s)} title="More options"
-                  style={{ width:26, height:26, borderRadius:7, border:`1px solid ${C.gray200}`, background:C.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  <Icon name="dots-three-vertical" size={13} color={C.gray500}/>
-                </button>
+                <div style={{ position:"relative" }}>
+                  <button onClick={()=>setMenuOpenId(menuOpenId===s.id?null:s.id)} title="More options"
+                    style={{ width:26, height:26, borderRadius:7, border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`, background:C.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <Icon name="dots-three-vertical" size={13} color={C.gray500}/>
+                  </button>
+                  {menuOpenId===s.id && (
+                    <>
+                      <div onClick={()=>setMenuOpenId(null)} style={{ position:"fixed",inset:0,zIndex:199 }}/>
+                      <div style={{ position:"absolute", right:0, top:30, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:180, overflow:"hidden" }}>
+                        {[
+                          { icon:"pencil-simple", label:"Edit Session", action:()=>{ onEditSession?.(s); setMenuOpenId(null); } },
+                          { icon:"trash", label:"Delete", danger:true, action:()=>{ setMenuOpenId(null); toast({type:"info", message:"Go to My Sessions to delete."}); } },
+                        ].map((item,idx,arr)=>(
+                          <button key={item.label} onClick={item.action}
+                            onMouseEnter={e=>e.currentTarget.style.background=item.danger?"#fff5f5":C.gray50}
+                            onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                            style={{ display:"flex",alignItems:"center",gap:10,width:"100%",padding:"11px 14px",background:"transparent",border:"none",borderBottom:idx<arr.length-1?`1px solid ${C.gray100}`:"none",cursor:"pointer",fontSize:13,fontWeight:500,color:item.danger?C.error:C.gray700,textAlign:"left",fontFamily:"inherit" }}>
+                            <Icon name={item.icon} size={14} color={item.danger?C.error:C.gray500}/>
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             );
           })}
