@@ -1434,8 +1434,8 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
     <div className="ao-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
         .ao-wrap      { padding:24px; }
-        .ao-metrics   { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; align-items:stretch; }
-        .ao-metrics > div { min-height:110px; display:flex; flex-direction:column; justify-content:space-between; }
+        .ao-metrics   { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+        .ao-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:flex-start; border-radius:14px !important; }
         .ao-bottom    { display:grid; grid-template-columns:3fr 2fr; gap:14px; margin-bottom:0; }
         .ao-h1        { font-size:22px; }
         .ao-sess-row  { display:flex; align-items:center; gap:10px; padding:14px 0; }
@@ -1461,7 +1461,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
           {label:"Total Site Visits",  val:"83",     delta:"+23 today"  },
           {label:"Total Revenue",      val:"$4,210", delta:"+8% vs prev"},
         ].map(m=>(
-          <div key={m.label} style={{ background:C.white, borderRadius:12, border:`1px solid ${C.gray200}`, padding:"16px" }}>
+          <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px" }}>
             <span style={{ display:"inline-block", fontSize:11, fontWeight:700, color:C.gray500, background:C.gray200, padding:"2px 6px", borderRadius:6, marginBottom:6 }}>{m.delta}</span>
             <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{m.val}</div>
             <div style={{ fontSize:13, fontWeight:600, color:C.gray600, lineHeight:1.5 }}>{m.label}</div>
@@ -1539,9 +1539,9 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
   return (
     <div className="asp-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
-        .asp-wrap  { padding:24px; }
-        .as-stats  { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; align-items:stretch; }
-        .as-stats > div { min-height:110px; display:flex; flex-direction:column; justify-content:space-between; }
+        .asp-wrap  { padding:20px 24px; }
+        .as-stats  { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+        .as-stats > div { height:130px; display:flex; flex-direction:column; justify-content:flex-start; border-radius:14px !important; }
         .asp-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:10px; }
         .asp-card-desktop { display:flex; }
         .asp-card-mobile  { display:none; }
@@ -1567,7 +1567,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
           {label:"Drafts",   val:adminSessions.filter(s=>s.status==="DRAFT").length,      color:C.gray900},
           {label:"Archived", val:adminSessions.filter(s=>s.status==="ARCHIVED").length,   color:C.gray900},
         ].map(s=>(
-          <div key={s.label} style={{ background:C.white, borderRadius:12, border:`1px solid ${C.gray200}`, padding:"16px" }}>
+          <div key={s.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px" }}>
             <div style={{ fontSize:26, fontWeight:900, color:s.color, lineHeight:1, marginBottom:4 }}>{s.val}</div>
             <div style={{ fontSize:13, fontWeight:600, color:C.gray600, lineHeight:1.5 }}>{s.label}</div>
           </div>
@@ -1875,8 +1875,8 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
     <div className="aa-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
         .aa-wrap    { padding:24px; }
-        .aa-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; align-items:stretch; }
-        .aa-metrics > div { min-height:110px; display:flex; flex-direction:column; justify-content:space-between; }
+        .aa-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+        .aa-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:flex-start; border-radius:14px !important; }
         .aa-bottom  { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
         .aa-header  { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:10px; }
         @media(max-width:640px){
@@ -1918,7 +1918,7 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
           { label:"Completion Rate",  val:`${stat.completion}%`          },
           { label:"Enrolled",         val:stat.enrolled.toLocaleString() },
         ].map(m => (
-          <div key={m.label} style={{ background:C.white, borderRadius:12, border:`1px solid ${C.gray200}`, padding:"16px" }}>
+          <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px" }}>
             <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{m.val}</div>
             <div style={{ fontSize:13, fontWeight:600, color:C.gray600, lineHeight:1.5 }}>{m.label}</div>
           </div>
