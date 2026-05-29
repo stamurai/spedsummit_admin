@@ -1435,7 +1435,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
       <style>{`
         .ao-wrap      { padding:24px; }
         .ao-metrics   { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
-        .ao-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:space-between; border-radius:14px !important; }
+        .ao-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-radius:14px !important; }
         .ao-bottom    { display:grid; grid-template-columns:3fr 2fr; gap:14px; margin-bottom:0; }
         .ao-h1        { font-size:22px; }
         .ao-sess-row  { display:flex; align-items:center; gap:10px; padding:14px 0; }
@@ -1541,7 +1541,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
       <style>{`
         .asp-wrap  { padding:20px 24px; }
         .as-stats  { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
-        .as-stats > div { height:130px; display:flex; flex-direction:column; justify-content:space-between; border-radius:14px !important; }
+        .as-stats > div { height:130px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-radius:14px !important; }
         .asp-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:10px; }
         .asp-card-desktop { display:flex; }
         .asp-card-mobile  { display:none; }
@@ -1876,7 +1876,7 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
       <style>{`
         .aa-wrap    { padding:24px; }
         .aa-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
-        .aa-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:space-between; border-radius:14px !important; }
+        .aa-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-radius:14px !important; }
         .aa-bottom  { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
         .aa-header  { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:10px; }
         @media(max-width:640px){
