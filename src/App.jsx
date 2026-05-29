@@ -3912,18 +3912,17 @@ export default function App() {
   }
 
   async function addAdminSession(form, publish, sections) {
-    const newId = Math.floor(100000000 + Math.random() * 900000000);
-
     const lessons = sections && sections.length
       ? sections.flatMap(sec => sec.lessons.map(l => ({
-          id: l.id, sectionTitle: sec.title, title: l.title,
+          sectionTitle: sec.title, title: l.title,
           duration: l.duration || "60:00", status: publish ? "available" : "draft",
           type: l.type || "video", vimeoUrl: l.vimeoUrl || form.vimeoUrl || "",
+          questions: l.questions || [],
         })))
-      : [{ id:1, sectionTitle:"Session", title:"Full Session", duration:"60:00", status: publish ? "available" : "draft", type:"video", vimeoUrl: form.vimeoUrl || "" }];
+      : [{ sectionTitle:"Session", title:"Full Session", duration:"60:00", status: publish ? "available" : "draft", type:"video", vimeoUrl: form.vimeoUrl || "" }];
 
     const supabaseEntry = {
-      id: newId, title: form.title, category: form.category || "SPED",
+      title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
       duration: "60 mins",
       description: form.desc || "", vimeo_url: form.vimeoUrl || "",
@@ -3934,14 +3933,15 @@ export default function App() {
       }))) : [],
     };
 
-    const { error } = await supabase.from("sessions").insert([supabaseEntry]);
+    console.log("[addAdminSession] inserting:", supabaseEntry);
+    const { data, error } = await supabase.from("sessions").insert([supabaseEntry]).select();
     if (error) {
-      toast({ type:"error", title:"Save failed", message:"Could not save to server: " + error.message });
+      console.error("[addAdminSession] error:", error);
+      toast({ type:"error", title:"Save failed", message: error.message });
       return;
     }
 
     await fetchSessions();
-    if (publish && !form.availableFrom) setSpring2026Ids(prev => [...prev, newId]);
   }
 
   async function updateSession(id, form, sections) {
