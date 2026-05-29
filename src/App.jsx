@@ -1628,10 +1628,10 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
       <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}` }}>
         {filtered.length === 0 && (
           <Empty style={{ margin:"8px 0" }}>
-            <EmptyMedia variant="icon" color="#6490E8"><Icon name="funnel" size={22} color="#6490E8"/></EmptyMedia>
+            <EmptyMedia variant="icon" color="#6490E8"><Icon name={adminSessions.length === 0 ? "play-circle" : "funnel"} size={22} color="#6490E8"/></EmptyMedia>
             <EmptyHeader>
-              <EmptyTitle>No sessions match</EmptyTitle>
-              <EmptyDescription>Try a different filter to find available sessions.</EmptyDescription>
+              <EmptyTitle>{adminSessions.length === 0 ? "No sessions yet" : "No sessions match"}</EmptyTitle>
+              <EmptyDescription>{adminSessions.length === 0 ? "Create your first session to get started." : "Try a different filter to find available sessions."}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         )}
