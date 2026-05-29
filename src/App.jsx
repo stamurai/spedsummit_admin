@@ -2649,6 +2649,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
     title:"", category:"SPED", lang:"English", desc:"",
     availableFrom:"", availableTo:"",
     instructorName:"", bio:"", linkedin:"", twitter:"",
+    instructorImage:"", thumbnail:"",
     vimeoUrl:"",
     discussion:true, qa:true, spinWheel:false, certificate:false, commentVisibility:"visible",
   });
@@ -2874,8 +2875,17 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
                   <Label>COURSE TITLE<span style={{ color:C.error }}> *</span></Label>
                   <input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Advanced Figma Auto-Layout Masterclass" style={{...inputSt, marginBottom:16}}/>
+                  <Label>THUMBNAIL</Label>
+                  <UploadZone accept="image/*" label="Upload thumbnail" hint="16:9 recommended (JPG, PNG)" icon="image" preview={form.thumbnail}
+                    onFile={async file => {
+                      const path = `thumbnails/${Date.now()}-${file.name}`;
+                      const { error } = await supabase.storage.from("session-resources").upload(path, file);
+                      if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("thumbnail", data.publicUrl); }
+                    }} height={140}/>
+                  <div style={{ marginTop:16 }}>
                   <Label>DESCRIPTION</Label>
                   <textarea value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder="Describe what learners will gain from this session…" rows={3} style={{...inputSt,resize:"vertical"}}/>
+                  </div>
                 </div>
               </div>
 
@@ -2883,6 +2893,14 @@ function AdminCreateSession({ onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Instructor</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
+                <Label>INSTRUCTOR PHOTO</Label>
+                <UploadZone accept="image/*" label="Upload photo" hint="Square image recommended" icon="user-circle" preview={form.instructorImage}
+                  onFile={async file => {
+                    const path = `instructors/${Date.now()}-${file.name}`;
+                    const { error } = await supabase.storage.from("session-resources").upload(path, file);
+                    if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("instructorImage", data.publicUrl); }
+                  }} aspect="1/1" height={120}/>
+                <div style={{ marginTop:16 }}>
                 <Label>INSTRUCTOR NAME<span style={{ color:C.error }}> *</span></Label>
                 <input value={form.instructorName} onChange={e=>upd("instructorName",e.target.value)} placeholder="e.g. Jane Doe" style={{...inputSt, marginBottom:16}}/>
                 <Label>PROFESSIONAL BIO</Label>
@@ -2891,6 +2909,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <input value={form.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
                 <Label>X (TWITTER)</Label>
                 <input value={form.twitter} onChange={e=>upd("twitter",e.target.value)} placeholder="X handle" style={inputSt}/>
+                </div>
                 </div>
               </div>
 
@@ -2976,11 +2995,13 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
     desc:           session.desc           || "",
     availableFrom:  session.availableFrom  || "",
     availableTo:    session.availableTo    || "",
-    instructorName: session.instructor     || "",
-    bio:            session.instructorBio  || session.bio || "",
-    linkedin:       session.linkedin       || "",
-    twitter:        session.twitter        || "",
-    vimeoUrl:       session.vimeoUrl       || "",
+    instructorName:  session.instructor     || "",
+    bio:             session.instructorBio  || session.bio || "",
+    linkedin:        session.linkedin       || "",
+    twitter:         session.twitter        || "",
+    instructorImage: session.instructorImage || "",
+    thumbnail:       session.thumbnail      || "",
+    vimeoUrl:        session.vimeoUrl       || "",
     discussion:     session.discussion !== undefined ? session.discussion : true,
     qa:             session.qa         !== undefined ? session.qa         : true,
     spinWheel:      session.spinWheel  !== undefined ? session.spinWheel  : false,
@@ -3239,8 +3260,17 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
                   <Label>SESSION TITLE<span style={{ color:C.error }}> *</span></Label>
                   <input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Advanced Figma Auto-Layout Masterclass" style={{...inputSt, marginBottom:16}}/>
+                  <Label>THUMBNAIL</Label>
+                  <UploadZone accept="image/*" label="Upload thumbnail" hint="16:9 recommended (JPG, PNG)" icon="image" preview={form.thumbnail}
+                    onFile={async file => {
+                      const path = `thumbnails/${Date.now()}-${file.name}`;
+                      const { error } = await supabase.storage.from("session-resources").upload(path, file);
+                      if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("thumbnail", data.publicUrl); }
+                    }} height={140}/>
+                  <div style={{ marginTop:16 }}>
                   <Label>DESCRIPTION</Label>
                   <textarea value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder="Describe what students will learn…" rows={3} style={{...inputSt,resize:"vertical"}}/>
+                  </div>
                 </div>
               </div>
 
@@ -3248,6 +3278,14 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Instructor</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
+                  <Label>INSTRUCTOR PHOTO</Label>
+                  <UploadZone accept="image/*" label="Upload photo" hint="Square image recommended" icon="user-circle" preview={form.instructorImage}
+                    onFile={async file => {
+                      const path = `instructors/${Date.now()}-${file.name}`;
+                      const { error } = await supabase.storage.from("session-resources").upload(path, file);
+                      if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("instructorImage", data.publicUrl); }
+                    }} aspect="1/1" height={120}/>
+                  <div style={{ marginTop:16 }}>
                   <Label>INSTRUCTOR NAME<span style={{ color:C.error }}> *</span></Label>
                   <input value={form.instructorName} onChange={e=>upd("instructorName",e.target.value)} placeholder="e.g. Jane Doe" style={{...inputSt, marginBottom:16}}/>
                   <Label>PROFESSIONAL BIO</Label>
@@ -3256,6 +3294,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                   <input value={form.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
                   <Label>X (TWITTER)</Label>
                   <input value={form.twitter} onChange={e=>upd("twitter",e.target.value)} placeholder="X handle" style={inputSt}/>
+                  </div>
                 </div>
               </div>
 
@@ -3831,6 +3870,7 @@ export default function App() {
         id: s.id, title: s.title, category: s.category,
         instructor: s.instructor || "", instructorBio: s.instructor_bio || "",
         linkedin: s.linkedin || "", twitter: s.twitter || "",
+        instructorImage: s.instructor_image || "", thumbnail: s.thumbnail || "",
         duration: s.duration || "60 mins", resources: s.resources || 0,
         progress: 0, status: "not-started",
         description: s.description || "",
@@ -3991,6 +4031,8 @@ export default function App() {
       instructorBio: full.instructorBio || "",
       linkedin: full.linkedin || "",
       twitter: full.twitter || "",
+      instructorImage: full.instructorImage || "",
+      thumbnail: full.thumbnail || "",
       desc: full.description || "",
       description: full.description || "",
       availableFrom: full.availableFrom || s.availableFrom || "",
@@ -4016,6 +4058,7 @@ export default function App() {
       id: newId, title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
       linkedin: form.linkedin || "", twitter: form.twitter || "",
+      instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
       duration: "60 mins",
       description: form.desc || "", vimeo_url: form.vimeoUrl || "",
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
@@ -4047,6 +4090,7 @@ export default function App() {
       title: form.title, category: form.category,
       instructor: form.instructorName, instructor_bio: form.bio,
       linkedin: form.linkedin || "", twitter: form.twitter || "",
+      instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
       description: form.desc, vimeo_url: form.vimeoUrl,
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
       ...(updatedLessons ? { lessons: updatedLessons } : {}),
