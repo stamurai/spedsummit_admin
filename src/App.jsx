@@ -1648,22 +1648,25 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                       <Icon name="dots-three-vertical" size={14} color={C.gray500}/>
                     </button>
                     {menuOpenId===s.id && (
-                      <div style={{ position:"absolute", right:0, top:34, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 4px 20px rgba(0,0,0,0.10)", zIndex:100, minWidth:180, overflow:"hidden" }}>
-                        {[
-                          { icon:"pencil",       label:"Edit Session",    action:()=>{ onEditSession(s); setMenuOpenId(null); } },
-                          { icon:"copy",         label:"Duplicate",       action:()=>{ toast({type:"info",message:"Duplicate coming soon."}); setMenuOpenId(null); } },
-                          { icon: s.status==="LIVE" ? "pause-circle" : "play-circle", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
-                            action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:s.status==="LIVE"?"DRAFT":"LIVE"}:x)); setMenuOpenId(null); } },
-                          { icon:"archive",      label:"Archive",         action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
-                          { icon:"trash",        label:"Delete",          danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
-                        ].map((item,idx,arr)=>(
-                          <button key={item.label} onClick={item.action}
-                            style={{ display:"flex",alignItems:"center",gap:10,width:"100%",padding:"10px 14px",background:"none",border:"none",borderBottom:idx<arr.length-1?`1px solid ${C.gray100}`:"none",cursor:"pointer",fontSize:13,fontWeight:500,color:item.danger?C.error:C.gray700,textAlign:"left",fontFamily:"inherit" }}>
-                            <Icon name={item.icon} size={14} color={item.danger?C.error:C.gray500}/>
-                            {item.label}
-                          </button>
-                        ))}
-                      </div>
+                      <>
+                        <div onClick={()=>setMenuOpenId(null)} style={{ position:"fixed",inset:0,zIndex:199 }}/>
+                        <div style={{ position:"fixed", right:"auto", background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200, overflow:"hidden", marginTop:4 }}>
+                          {[
+                            { icon:"pencil",       label:"Edit Session",    action:()=>{ onEditSession(s); setMenuOpenId(null); } },
+                            { icon:"copy",         label:"Duplicate",       action:()=>{ toast({type:"info",message:"Duplicate coming soon."}); setMenuOpenId(null); } },
+                            { icon: s.status==="LIVE" ? "pause-circle" : "play-circle", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
+                              action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:s.status==="LIVE"?"DRAFT":"LIVE"}:x)); setMenuOpenId(null); } },
+                            { icon:"archive",      label:"Archive",         action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
+                            { icon:"trash",        label:"Delete",          danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
+                          ].map((item,idx,arr)=>(
+                            <button key={item.label} onClick={item.action}
+                              style={{ display:"flex",alignItems:"center",gap:10,width:"100%",padding:"11px 16px",background:"none",border:"none",borderBottom:idx<arr.length-1?`1px solid ${C.gray100}`:"none",cursor:"pointer",fontSize:13,fontWeight:500,color:item.danger?C.error:C.gray700,textAlign:"left",fontFamily:"inherit" }}>
+                              <Icon name={item.icon} size={14} color={item.danger?C.error:C.gray500}/>
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
