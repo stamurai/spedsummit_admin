@@ -1479,7 +1479,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
       {/* Recent activity + growth */}
       <div className="ao-bottom">
         {/* Recent sessions snapshot */}
-        <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px 16px 6px" }}>
+        {adminSessions.length === 0 ? null : <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px 16px 6px" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
             <h2 style={{ margin:0, fontSize:15, fontWeight:700, color:C.gray900 }}>Recent Sessions</h2>
             <button onClick={()=>onNavigate("admin-sessions")} style={{ background:"none", border:"none", color:C.primary, fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", alignItems:"center", gap:4, fontFamily:"inherit" }}>
@@ -1526,7 +1526,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
               </div>
             );
           })}
-        </div>
+        </div>}
 
         {/* Engagement Guide */}
         <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:16 }}>
