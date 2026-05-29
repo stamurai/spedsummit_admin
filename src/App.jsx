@@ -65,6 +65,10 @@ const ICON_MAP = {
   timer: PhosphorIcons.Timer,
   "cloud-arrow-up": PhosphorIcons.CloudArrowUp,
   "spinner-gap": PhosphorIcons.SpinnerGap,
+  "pencil-simple": PhosphorIcons.PencilSimple,
+  "archive-tray": PhosphorIcons.ArchiveTray,
+  "arrow-fat-up": PhosphorIcons.ArrowFatUp,
+  "arrow-fat-down": PhosphorIcons.ArrowFatDown,
   palette: PhosphorIcons.Palette,
   moon: PhosphorIcons.Moon,
   sun: PhosphorIcons.Sun,
@@ -1638,10 +1642,6 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                   </div>
                 </div>
                 <div style={{ display:"flex", gap:6, flexShrink:0 }}>
-                  <button onClick={()=>onEditSession(s)} title="Edit session"
-                    style={{ width:28,height:28,borderRadius:8,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                    <Icon name="pencil" size={13} color={C.gray500}/>
-                  </button>
                   <div style={{ position:"relative" }}>
                     <button onClick={()=>setMenuOpenId(menuOpenId===s.id?null:s.id)} aria-label="More options"
                       style={{ width:28,height:28,borderRadius:8,border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
@@ -1652,11 +1652,11 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                         <div onClick={()=>setMenuOpenId(null)} style={{ position:"fixed",inset:0,zIndex:199 }}/>
                         <div style={{ position:"absolute", right:0, top:34, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200, overflow:"visible" }}>
                           {[
-                            { icon:"pencil-simple", label:"Edit Session", action:()=>{ onEditSession(s); setMenuOpenId(null); } },
-                            { icon: s.status==="LIVE" ? "arrow-circle-down" : "arrow-circle-up", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
+                            { icon:"pencil-simple",  label:"Edit Session", action:()=>{ onEditSession(s); setMenuOpenId(null); } },
+                            { icon: s.status==="LIVE" ? "arrow-fat-down" : "arrow-fat-up", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
                               action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:s.status==="LIVE"?"DRAFT":"LIVE"}:x)); setMenuOpenId(null); } },
-                            { icon:"archive-box",  label:"Archive", action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
-                            { icon:"trash",        label:"Delete",  danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
+                            { icon:"archive-tray",   label:"Archive", action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
+                            { icon:"trash",          label:"Delete",  danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
                           ].map((item,idx,arr)=>(
                             <button key={item.label} onClick={item.action}
                               onMouseEnter={e=>e.currentTarget.style.background=item.danger?"#fff5f5":C.gray50}
