@@ -2917,14 +2917,17 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
   function handleSectionsChange(secs) { sectionsRef.current = secs; }
 
   // Build initialSections from session.lessons (flat list → one section)
-  const initialSections = session.lessons && session.lessons.length ? [{
-    id: 1, title: "Session", collapsed: false, resources: [],
-    lessons: session.lessons.map(l => ({
-      id: l.id, title: l.title, type: l.type || "video",
-      duration: l.duration || "", status: l.status || "draft",
-      vimeoUrl: l.vimeoUrl || "", questions: Array.isArray(l.questions) ? l.questions : [], quizExpanded: false,
-    })),
-  }] : null;
+  const mappedLessons = (session.lessons || []).map(l => ({
+    id: l.id, title: l.title, type: l.type || "video",
+    duration: l.duration || "", status: l.status || "draft",
+    vimeoUrl: l.vimeoUrl || "", questions: Array.isArray(l.questions) ? l.questions : [], quizExpanded: false,
+  }));
+  // Ensure there's always a quiz lesson
+  const hasQuiz = mappedLessons.some(l => l.type === "quiz");
+  if (!hasQuiz) {
+    mappedLessons.push({ id: Date.now(), title:"Assessment", type:"quiz", duration:"", status:"draft", vimeoUrl:"", questions:[{ id: Date.now()+1, type:"multiple-choice", text:"", options:["","","",""], correct:0, correctArr:[] }], quizExpanded:true });
+  }
+  const initialSections = [{ id:1, title:"Session", collapsed:false, resources:[], lessons: mappedLessons }];
 
   const [questions, setQuestions] = useState(session.questions || []);
 
