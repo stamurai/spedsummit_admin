@@ -2585,7 +2585,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
     { id:101, title:"Welcome & course overview", type:"video", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
   ]}]);
   const sectionsRef = useRef(sections);
-  function handleSectionsChange(secs) { sectionsRef.current = secs; }
+  function handleSectionsChange(secs) { sectionsRef.current = secs; setSections(secs); }
   const [showDiscard, setShowDiscard] = useState(false);
 
   function isDirty() {
@@ -2791,7 +2791,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
   function renderTabContent() { return (<>
             {/* CurriculumBuilder always rendered (never unmounts) — hidden via display when not active */}
             <div style={{ display: tab === "curriculum" ? "block" : "none" }}>
-              <CurriculumBuilder toast={toast} initialSections={null} onSectionsChange={handleSectionsChange}/>
+              <CurriculumBuilder toast={toast} initialSections={sections} onSectionsChange={handleSectionsChange}/>
             </div>
             {/* ── SESSION DETAILS tab ── */}
             {tab === "details" && <>
