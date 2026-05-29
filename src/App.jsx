@@ -2160,7 +2160,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
     if (initialSections && initialSections.length) return initialSections;
     return [{ id:1, title:"Introduction", collapsed:false, resources:[], lessons:[
       { id:101, title:"Welcome & course overview", type:"video", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
-      { id:102, title:"New Quiz", type:"quiz", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
+      { id:102, title:"New Quiz", type:"quiz", duration:"", status:"draft", vimeoUrl:"", questions:[{ id:1021, type:"multiple-choice", text:"", options:["","","",""], correct:0, correctArr:[] }], quizExpanded:true },
     ]}];
   });
 
@@ -2430,9 +2430,11 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
                     </div>
                   );
                 })}
-            <button onClick={()=>addQuestion(l._secId,l.id)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, cursor:"pointer", fontSize:13, fontWeight:600, color:C.gray600, fontFamily:"inherit", marginTop:8 }}>
-              <Icon name="plus" size={13} color={C.gray500}/>Add question
-            </button>
+            {l.questions.length > 0 && (
+              <button onClick={()=>addQuestion(l._secId,l.id)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, cursor:"pointer", fontSize:13, fontWeight:600, color:C.gray600, fontFamily:"inherit", marginTop:8 }}>
+                <Icon name="plus" size={13} color={C.gray500}/>Add question
+              </button>
+            )}
           </div>
           </>}
           </div>
@@ -2578,7 +2580,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
   const upd = (k,v) => setForm(f=>({...f,[k]:v}));
   const [sections, setSections] = useState([{ id:1, title:"Introduction", collapsed:false, resources:[], lessons:[
     { id:101, title:"Welcome & course overview", type:"video", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
-    { id:102, title:"New Quiz", type:"quiz", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
+    { id:102, title:"New Quiz", type:"quiz", duration:"", status:"draft", vimeoUrl:"", questions:[{ id:1021, type:"multiple-choice", text:"", options:["","","",""], correct:0, correctArr:[] }], quizExpanded:true },
   ]}]);
   const sectionsRef = useRef(sections);
   function handleSectionsChange(secs) { sectionsRef.current = secs; setSections(secs); }
