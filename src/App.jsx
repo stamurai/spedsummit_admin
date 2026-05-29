@@ -3983,7 +3983,19 @@ export default function App() {
 
   function openEdit(s) {
     const full = sessions.find(sess => sess.id === s.id);
-    setEditingSession(full ? { ...s, lessons: full.lessons, vimeoUrl: full.vimeoUrl || s.vimeoUrl } : s);
+    setEditingSession(full ? {
+      ...s,
+      lessons: full.lessons,
+      vimeoUrl: full.vimeoUrl || s.vimeoUrl,
+      instructor: full.instructor || s.instructor || "",
+      instructorBio: full.instructorBio || "",
+      linkedin: full.linkedin || "",
+      twitter: full.twitter || "",
+      desc: full.description || "",
+      description: full.description || "",
+      availableFrom: full.availableFrom || s.availableFrom || "",
+      availableTo: full.availableTo || s.availableTo || "",
+    } : s);
     setPage("admin-edit");
     sessionStorage.setItem("page", "admin-edit");
     if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
