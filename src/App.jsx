@@ -2583,6 +2583,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
   const upd = (k,v) => setForm(f=>({...f,[k]:v}));
   const [sections, setSections] = useState([{ id:1, title:"Introduction", collapsed:false, resources:[], lessons:[
     { id:101, title:"Welcome & course overview", type:"video", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
+    { id:102, title:"New Quiz", type:"quiz", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false },
   ]}]);
   const sectionsRef = useRef(sections);
   function handleSectionsChange(secs) { sectionsRef.current = secs; setSections(secs); }
