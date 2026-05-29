@@ -1435,7 +1435,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
       <style>{`
         .ao-wrap      { padding:24px; }
         .ao-metrics   { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
-        .ao-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; border-radius:14px !important; }
+        .ao-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; border-radius:14px !important; gap:4px; }
         .ao-bottom    { display:grid; grid-template-columns:3fr 2fr; gap:14px; margin-bottom:0; }
         .ao-h1        { font-size:22px; }
         .ao-sess-row  { display:flex; align-items:center; gap:10px; padding:14px 0; }
@@ -1984,7 +1984,7 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
           : [0, Math.floor((lineData.length-1)/2), lineData.length-1].map(i => ({ l:lineData[i].label, x:xOf(i) }));
 
         return (
-          <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:"20px 20px 16px", marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ width:"100%", background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:"20px 20px 16px", marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
               <div>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:2 }}>Views over time</div>
@@ -2523,6 +2523,48 @@ function DiscardModal({ onDiscard, onKeep }) {
             onMouseLeave={e=>e.currentTarget.style.background="#ef4444"}>
             Discard
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminProfilePage({ onBack, userName, userEmail, userAvatar }) {
+  return (
+    <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24 }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:6, fontSize:14, fontWeight:600, color:C.gray600, fontFamily:"inherit", padding:0 }}>
+          <Icon name="caret-left" size={16} color={C.gray600}/> Back
+        </button>
+      </div>
+      <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:32, maxWidth:480, boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:28, paddingBottom:24, borderBottom:`1px solid ${C.gray100}` }}>
+          <div style={{ width:64, height:64, borderRadius:"50%", background:C.primary, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", flexShrink:0 }}>
+            {userAvatar
+              ? <img src={userAvatar} alt="avatar" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              : <span style={{ fontSize:26, fontWeight:800, color:"#fff" }}>{(userName||"A")[0].toUpperCase()}</span>}
+          </div>
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:C.gray900, lineHeight:1.2 }}>{userName || "Admin"}</div>
+            <div style={{ fontSize:13, color:C.gray500, marginTop:4 }}>{userEmail || ""}</div>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:5, marginTop:6, background:"rgba(99,102,241,0.10)", borderRadius:6, padding:"2px 8px" }}>
+              <span style={{ fontSize:11, fontWeight:700, color:C.primary }}>Admin</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.6, textTransform:"uppercase", marginBottom:6 }}>Full Name</div>
+            <div style={{ fontSize:15, fontWeight:600, color:C.gray900 }}>{userName || "—"}</div>
+          </div>
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.6, textTransform:"uppercase", marginBottom:6 }}>Email</div>
+            <div style={{ fontSize:15, fontWeight:600, color:C.gray900 }}>{userEmail || "—"}</div>
+          </div>
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.6, textTransform:"uppercase", marginBottom:6 }}>Role</div>
+            <div style={{ fontSize:15, fontWeight:600, color:C.gray900 }}>Administrator</div>
+          </div>
         </div>
       </div>
     </div>
@@ -3948,6 +3990,7 @@ export default function App() {
     if (page==="admin-create") return <AdminCreateSession onBack={()=>nav("admin-sessions")} toast={toast} onSave={addAdminSession}/>;
     if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
     if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} sessions={sessions}/>;
+    if (page==="admin-profile") return <AdminProfilePage onBack={()=>nav("admin-overview")} userName={userName} userEmail={userEmail} userAvatar={userAvatar}/>;
     return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions}/>;
   }
 
@@ -3991,7 +4034,7 @@ export default function App() {
           setUserName(""); setUserEmail(""); setUserAvatar(null);
           setIsAdmin(false);
         }}
-        onNavigateProfile={() => {}}
+        onNavigateProfile={() => nav("admin-profile")}
         onOpenSession={() => {}}
         onNavigate={nav}
         userName={userName}
