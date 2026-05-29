@@ -2345,10 +2345,12 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
           <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>{l.type==="quiz"?"Assessment":"Lesson"}</div>
           <div style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
 
-          <Label>TITLE</Label>
-          <input value={l.title} onChange={e=>patchLesson(l._secId,l.id,{title:e.target.value})}
-            placeholder="Enter title…"
-            style={{...inputSt, marginBottom:16}}/>
+          {l.type !== "quiz" && <>
+            <Label>TITLE</Label>
+            <input value={l.title} onChange={e=>patchLesson(l._secId,l.id,{title:e.target.value})}
+              placeholder="Enter title…"
+              style={{...inputSt, marginBottom:16}}/>
+          </>}
 
           {/* Video content */}
           {l.type==="video" && <>
