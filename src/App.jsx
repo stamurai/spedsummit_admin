@@ -1449,7 +1449,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
           .ao-tip-row  { padding:10px 0; gap:10px; }
         }
       `}</style>
-      <div style={{ marginBottom:18 }}>
+      <div style={{ marginBottom:22 }}>
         <h1 className="ao-h1" style={{ margin:0, fontWeight:700, color:C.gray900, letterSpacing:-0.3, lineHeight:1.25 }}>Overview</h1>
       </div>
 
