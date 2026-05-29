@@ -1539,7 +1539,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
   return (
     <div className="asp-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
-        .asp-wrap  { padding:20px 24px; }
+        .asp-wrap  { padding:24px 24px; }
         .as-stats  { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
         .as-stats > div { height:130px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; border-radius:14px !important; }
         .asp-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:10px; }
@@ -3762,7 +3762,8 @@ export default function App() {
         setIsLoggedIn(true);
         setIsAdmin(true);
         sessionStorage.setItem("isAdmin", "1");
-        if (event === "SIGNED_IN") { setPage("admin-overview"); sessionStorage.setItem("page", "admin-overview"); sessionStorage.removeItem("loggedOut"); }
+        if (event === "SIGNED_IN" && !sessionStorage.getItem("loggedIn")) { setPage("admin-overview"); sessionStorage.setItem("page", "admin-overview"); }
+        if (event === "SIGNED_IN") { sessionStorage.removeItem("loggedOut"); }
         sessionStorage.setItem("loggedIn", "1");
         fetchSessions();
       }
