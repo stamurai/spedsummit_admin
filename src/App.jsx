@@ -1538,6 +1538,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
 function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [], setAdminSessions }) {
   const [filter, setFilter] = useState("ALL");
   const [menuOpenId, setMenuOpenId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const statuses = ["ALL", "LIVE", "DRAFT", "ARCHIVED"];
   const filtered = filter === "ALL" ? adminSessions :
                    adminSessions.filter(s => s.status === filter);
@@ -1658,7 +1659,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                             { icon: s.status==="LIVE" ? "file" : "play-circle", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
                               action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:s.status==="LIVE"?"DRAFT":"LIVE"}:x)); setMenuOpenId(null); } },
                             { icon:"file-archive",   label:"Archive", action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
-                            { icon:"trash",          label:"Delete",  danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
+                            { icon:"trash",          label:"Delete",  danger:true, action:()=>{ setDeleteConfirmId(s.id); setMenuOpenId(null); } },
                           ].map((item,idx,arr)=>(
                             <button key={item.label} onClick={item.action}
                               onMouseEnter={e=>e.currentTarget.style.background=item.danger?"#fff5f5":C.gray50}
@@ -1703,6 +1704,31 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
           );
         })}
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteConfirmId && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ background:C.white, borderRadius:20, padding:"32px 28px", maxWidth:380, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.2)", textAlign:"center" }}>
+            <div style={{ width:52, height:52, borderRadius:"50%", background:"#fee2e2", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+              <Icon name="trash" size={24} color={C.error}/>
+            </div>
+            <div style={{ fontSize:18, fontWeight:800, color:C.gray900, marginBottom:8 }}>Delete Session?</div>
+            <div style={{ fontSize:14, color:C.gray500, marginBottom:24, lineHeight:1.5 }}>
+              This action cannot be undone. The session will be permanently removed.
+            </div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={()=>setDeleteConfirmId(null)}
+                style={{ flex:1, padding:"10px 0", borderRadius:10, border:`1px solid ${C.gray200}`, background:C.white, color:C.gray700, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
+                Cancel
+              </button>
+              <button onClick={()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==deleteConfirmId)); setDeleteConfirmId(null); }}
+                style={{ flex:1, padding:"10px 0", borderRadius:10, border:"none", background:C.error, color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
