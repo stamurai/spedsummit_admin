@@ -2725,7 +2725,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
             <p style={{ margin:"0 0 16px", fontSize:13, color:C.gray500 }}>{TAB_META[tab].subtitle}</p>
           </div>
           <div style={{ padding:"0 16px 24px" }}>
-            {renderTabContent()}
+            {renderTabContent(true)}
             <div className="acs-actions" style={{ display:"flex", justifyContent:"flex-end", gap:8, paddingTop:24, borderTop:`1px solid ${C.gray200}`, marginTop:24 }}>
               <Btn variant="outline" onClick={tryBack}>Close</Btn>
               {tab === "availability"
@@ -2784,16 +2784,15 @@ function AdminCreateSession({ onBack, toast, onSave }) {
 
       </div>
 
-    {/* Single CurriculumBuilder instance — shown/hidden by CSS, never unmounts */}
-    <div style={{ display: tab === "curriculum" ? "block" : "none", position:"absolute", top:0, left:0, right:0, bottom:0, pointerEvents: tab === "curriculum" ? "auto" : "none", zIndex: tab === "curriculum" ? 1 : -1, overflow:"auto" }}>
-      <CurriculumBuilder toast={toast} initialSections={sections} onSectionsChange={handleSectionsChange}/>
-    </div>
-
     {showDiscard && <DiscardModal onDiscard={onBack} onKeep={() => setShowDiscard(false)}/>}
     </div>
   );
 
-  function renderTabContent() { return (<>
+  function renderTabContent(isMobile=false) { return (<>
+            {/* CurriculumBuilder — one per layout, state synced via handleSectionsChange */}
+            <div style={{ display: tab === "curriculum" ? "block" : "none" }}>
+              <CurriculumBuilder key={isMobile ? "curriculum-mobile" : "curriculum-desktop"} toast={toast} initialSections={sections} onSectionsChange={handleSectionsChange}/>
+            </div>
             {/* ── SESSION DETAILS tab ── */}
             {tab === "details" && <>
               {/* Session Info card */}
