@@ -1653,9 +1653,9 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                         <div style={{ position:"absolute", right:0, top:34, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200, overflow:"visible" }}>
                           {[
                             { icon:"pencil-simple",  label:"Edit Session", action:()=>{ onEditSession(s); setMenuOpenId(null); } },
-                            { icon: s.status==="LIVE" ? "arrow-fat-down" : "arrow-fat-up", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
+                            { icon: s.status==="LIVE" ? "toggle-left" : "toggle-right", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
                               action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:s.status==="LIVE"?"DRAFT":"LIVE"}:x)); setMenuOpenId(null); } },
-                            { icon:"archive-tray",   label:"Archive", action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
+                            { icon:"clock",          label:"Archive", action:()=>{ setAdminSessions(prev=>prev.map(x=>x.id===s.id?{...x,status:"ARCHIVED"}:x)); setMenuOpenId(null); } },
                             { icon:"trash",          label:"Delete",  danger:true, action:()=>{ setAdminSessions(prev=>prev.filter(x=>x.id!==s.id)); setMenuOpenId(null); } },
                           ].map((item,idx,arr)=>(
                             <button key={item.label} onClick={item.action}
