@@ -549,11 +549,13 @@ function DropdownMenu({ items, onClose, anchorRef }) {
     </div>
   );
 }
-function UploadZone({ accept, label, hint, icon, preview, onFile, aspect="16/9", height=130 }) {
+function UploadZone({ accept, label, hint, icon, preview, onFile, aspect="16/9", height=130, circle=false }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [localPreview, setLocalPreview] = useState(preview || null);
   const dark = document.querySelector("[data-theme='dark']") !== null;
+
+  useEffect(() => { if (preview) setLocalPreview(preview); }, [preview]);
 
   function handleFile(file) {
     if (!file) return;
@@ -563,26 +565,32 @@ function UploadZone({ accept, label, hint, icon, preview, onFile, aspect="16/9",
     if (onFile) onFile(file);
   }
 
+  const borderRadius = circle ? "50%" : 12;
+  const containerStyle = circle
+    ? { width: height, height, borderRadius:"50%", flexShrink:0 }
+    : { width:"100%", aspectRatio: aspect, maxHeight: height };
+
   return (
     <div
       onClick={() => inputRef.current?.click()}
       onDragOver={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-      style={{ height, border:`2px dashed ${dragging ? C.primary : dark ? "rgba(255,255,255,0.15)" : C.gray300}`, borderRadius:12, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", background:dragging ? C.primaryLight : dark ? "rgba(255,255,255,0.04)" : "#fafafa", transition:"all .2s", position:"relative", overflow:"hidden" }}>
+      style={{ ...containerStyle, border:`2px dashed ${dragging ? C.primary : localPreview ? "transparent" : dark ? "rgba(255,255,255,0.15)" : C.gray300}`, borderRadius, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", background:dragging ? C.primaryLight : localPreview ? "transparent" : dark ? "rgba(255,255,255,0.04)" : "#fafafa", transition:"all .2s", position:"relative", overflow:"hidden" }}>
       {localPreview ? (
         <>
           <img src={localPreview} alt="preview" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}/>
-          <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8 }}>
-            <Icon name="upload-simple" size={20} color="#fff"/>
-            <span style={{ fontSize:12, color:"#fff", fontWeight:600 }}>Replace</span>
+          <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.45)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6, opacity:0, transition:"opacity .15s" }}
+            onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0}>
+            <Icon name="upload-simple" size={18} color="#fff"/>
+            <span style={{ fontSize:11, color:"#fff", fontWeight:600 }}>Replace</span>
           </div>
         </>
       ) : (
         <>
-          <Icon name={icon||"cloud-arrow-up"} size={28} color={dragging ? C.primary : dark ? "rgba(255,255,255,0.3)" : C.gray400}/>
-          <span style={{ fontSize:14, color: dark ? "rgba(255,255,255,0.6)" : C.gray600, fontWeight:600, marginTop:8 }}>{label||"Click or drag to upload"}</span>
-          {hint && <span style={{ fontSize:12, color: dark ? "rgba(255,255,255,0.35)" : C.gray400, marginTop:4 }}>{hint}</span>}
+          <Icon name={icon||"cloud-arrow-up"} size={circle ? 24 : 28} color={dragging ? C.primary : dark ? "rgba(255,255,255,0.3)" : C.gray400}/>
+          {!circle && <span style={{ fontSize:13, color: dark ? "rgba(255,255,255,0.6)" : C.gray600, fontWeight:600, marginTop:8 }}>{label||"Click or drag to upload"}</span>}
+          {hint && !circle && <span style={{ fontSize:11, color: dark ? "rgba(255,255,255,0.35)" : C.gray400, marginTop:4 }}>{hint}</span>}
         </>
       )}
       <input ref={inputRef} type="file" accept={accept||"*/*"} style={{ display:"none" }} onChange={e => handleFile(e.target.files[0])}/>
@@ -2881,7 +2889,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                       const path = `thumbnails/${Date.now()}-${file.name}`;
                       const { error } = await supabase.storage.from("session-resources").upload(path, file);
                       if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("thumbnail", data.publicUrl); }
-                    }} height={140}/>
+                    }} aspect="16/9" height={160}/>
                   <div style={{ marginTop:16 }}>
                   <Label>DESCRIPTION</Label>
                   <textarea value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder="Describe what learners will gain from this session…" rows={3} style={{...inputSt,resize:"vertical"}}/>
@@ -2894,12 +2902,12 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Instructor</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
                 <Label>INSTRUCTOR PHOTO</Label>
-                <UploadZone accept="image/*" label="Upload photo" hint="Square image recommended" icon="user-circle" preview={form.instructorImage}
+                <UploadZone accept="image/*" icon="user-circle" preview={form.instructorImage}
                   onFile={async file => {
                     const path = `instructors/${Date.now()}-${file.name}`;
                     const { error } = await supabase.storage.from("session-resources").upload(path, file);
                     if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("instructorImage", data.publicUrl); }
-                  }} aspect="1/1" height={120}/>
+                  }} circle height={96}/>
                 <div style={{ marginTop:16 }}>
                 <Label>INSTRUCTOR NAME<span style={{ color:C.error }}> *</span></Label>
                 <input value={form.instructorName} onChange={e=>upd("instructorName",e.target.value)} placeholder="e.g. Jane Doe" style={{...inputSt, marginBottom:16}}/>
@@ -3266,7 +3274,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                       const path = `thumbnails/${Date.now()}-${file.name}`;
                       const { error } = await supabase.storage.from("session-resources").upload(path, file);
                       if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("thumbnail", data.publicUrl); }
-                    }} height={140}/>
+                    }} aspect="16/9" height={160}/>
                   <div style={{ marginTop:16 }}>
                   <Label>DESCRIPTION</Label>
                   <textarea value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder="Describe what students will learn…" rows={3} style={{...inputSt,resize:"vertical"}}/>
