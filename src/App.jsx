@@ -2643,12 +2643,14 @@ function AdminCreateSession({ onBack, toast, onSave }) {
     </div>
   );
 
-  function save(publish=false) {
+  async function save(publish=false) {
     if (!form.title.trim()) { toast({ type:"error", title:"Title required", message:"Please add a session title before saving." }); return; }
-    onSave && onSave(form, publish, sectionsRef.current);
-    if (publish) { toast({ type:"success", title:"Session published! 🚀", message:`"${form.title}" is now live.` }); }
-    else { toast({ type:"info", title:"Draft saved", message:`"${form.title}" saved as draft.` }); }
-    setTimeout(onBack, 800);
+    if (onSave) {
+      await onSave(form, publish, sectionsRef.current);
+      if (publish) { toast({ type:"success", title:"Session published! 🚀", message:`"${form.title}" is now live.` }); }
+      else { toast({ type:"info", title:"Draft saved", message:`"${form.title}" saved as draft.` }); }
+      setTimeout(onBack, 800);
+    }
   }
 
   const TABS = [
@@ -3772,8 +3774,10 @@ export default function App() {
       setSessionsLoading(false);
 
       setAdminSessions(rows.map(s => {
+        const storedStatus = (s.status || "").toUpperCase();
         const state = getSessionState({ available_from: s.available_from, available_to: s.available_to });
-        const statusLabel = state === "live" ? "LIVE" : state === "past" ? "ARCHIVED" : "DRAFT";
+        const derivedStatus = state === "live" ? "LIVE" : state === "past" ? "ARCHIVED" : "DRAFT";
+        const statusLabel = ["LIVE","DRAFT","ARCHIVED"].includes(storedStatus) ? storedStatus : derivedStatus;
         const dateLabel = s.available_from
           ? new Date(s.available_from).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
           : "";
@@ -3910,48 +3914,35 @@ export default function App() {
 
   async function addAdminSession(form, publish, sections) {
     const newId = Math.floor(100000000 + Math.random() * 900000000);
-    const dateLabel = form.availableFrom
-      ? new Date(form.availableFrom).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
-      : new Date().toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
 
-    const adminEntry = {
+    const lessons = sections && sections.length
+      ? sections.flatMap(sec => sec.lessons.map(l => ({
+          id: l.id, sectionTitle: sec.title, title: l.title,
+          duration: l.duration || "60:00", status: publish ? "available" : "draft",
+          type: l.type || "video", vimeoUrl: l.vimeoUrl || form.vimeoUrl || "",
+        })))
+      : [{ id:1, sectionTitle:"Session", title:"Full Session", duration:"60:00", status: publish ? "available" : "draft", type:"video", vimeoUrl: form.vimeoUrl || "" }];
+
+    const supabaseEntry = {
       id: newId, title: form.title, category: form.category || "SPED",
-      status: publish ? "LIVE" : "DRAFT", date: dateLabel, enrolled: 0,
-      availableFrom: form.availableFrom || "", availableTo: form.availableTo || "",
-      instructor: form.instructorName || "", vimeoUrl: form.vimeoUrl || "", desc: form.desc || "",
+      instructor: form.instructorName || "", instructor_bio: form.bio || "",
+      duration: "60 mins", status: publish ? "LIVE" : "DRAFT",
+      description: form.desc || "", vimeo_url: form.vimeoUrl || "",
+      available_from: form.availableFrom || null, available_to: form.availableTo || null,
+      lessons,
+      resources: sections ? sections.flatMap(sec => (sec.resources || []).map(r => ({
+        title: r.title, type: r.type, size: r.size, icon: r.icon, url: r.url,
+      }))) : [],
     };
-    setAdminSessions(prev => [adminEntry, ...prev]);
 
-    if (publish) {
-      const lessons = sections && sections.length
-        ? sections.flatMap(sec => sec.lessons.map(l => ({
-            id: l.id, sectionTitle: sec.title, title: l.title,
-            duration: l.duration || "60:00", status: "available", type: l.type || "video",
-            vimeoUrl: l.vimeoUrl || form.vimeoUrl || "",
-          })))
-        : [{ id:1, sectionTitle:"Session", title:"Full Session", duration:"60:00", status:"available", type:"video", vimeoUrl: form.vimeoUrl || "" }];
-
-      const supabaseEntry = {
-        id: newId, title: form.title, category: form.category || "SPED",
-        instructor: form.instructorName || "", instructor_bio: form.bio || "",
-        duration: "60 mins",
-        description: form.desc || "", vimeo_url: form.vimeoUrl || "",
-        available_from: form.availableFrom || null, available_to: form.availableTo || null,
-        lessons,
-        resources: sections ? sections.flatMap(sec => (sec.resources || []).map(r => ({
-          title: r.title, type: r.type, size: r.size, icon: r.icon, url: r.url,
-        }))) : [],
-      };
-
-      const { error } = await supabase.from("sessions").insert([supabaseEntry]);
-      if (error) {
-        toast({ type:"error", title:"Publish failed", message:"Could not save to server: " + error.message });
-        return;
-      }
-
-      fetchSessions();
-      if (!form.availableFrom) setSpring2026Ids(prev => [...prev, newId]);
+    const { error } = await supabase.from("sessions").insert([supabaseEntry]);
+    if (error) {
+      toast({ type:"error", title:"Save failed", message:"Could not save to server: " + error.message });
+      return;
     }
+
+    await fetchSessions();
+    if (publish && !form.availableFrom) setSpring2026Ids(prev => [...prev, newId]);
   }
 
   async function updateSession(id, form, sections) {
