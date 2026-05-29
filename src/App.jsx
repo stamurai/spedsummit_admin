@@ -313,6 +313,8 @@ const INSTRUCTOR_AVATARS = {
   "Sydney Bassard":  "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&auto=format",
   "Diana Williams":  "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&auto=format",
 };
+const NOTIF_DATA = [];
+
 const SEASONS = [
   {
     id: "spring-2026",
