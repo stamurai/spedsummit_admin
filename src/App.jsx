@@ -2740,7 +2740,8 @@ function AdminCreateSession({ onBack, toast, onSave }) {
   async function save(publish=false) {
     if (!form.title.trim()) { toast({ type:"error", title:"Title required", message:"Please add a session title before saving." }); return; }
     if (onSave) {
-      await onSave(form, publish, sectionsRef.current);
+      const ok = await onSave(form, publish, sectionsRef.current);
+      if (ok === false) return;
       if (publish) { toast({ type:"success", title:"Session published! 🚀", message:`"${form.title}" is now live.` }); }
       else { toast({ type:"info", title:"Draft saved", message:`"${form.title}" saved as draft.` }); }
       setTimeout(onBack, 800);
@@ -2820,7 +2821,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
           </div>
           <div style={{ padding:"0 16px 24px" }}>
             {renderTabContent(true)}
-            <div className="acs-actions" style={{ display:"flex", justifyContent:"flex-end", gap:8, paddingTop:24, borderTop:`1px solid ${C.gray200}`, marginTop:24 }}>
+            <div className="acs-actions" style={{ position:"sticky", bottom:0, display:"flex", justifyContent:"flex-end", gap:8, paddingTop:16, paddingBottom:16, borderTop:`1px solid ${C.gray200}`, marginTop:24, background:C.gray50, zIndex:10 }}>
               <Btn variant="outline" onClick={tryBack}>Close</Btn>
               {tab === "availability"
                 ? <Btn onClick={()=>save(true)}>Publish</Btn>
@@ -2867,7 +2868,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
           </div>
 
           {/* Actions */}
-          <div style={{ display:"flex", justifyContent:"flex-end", gap:8, paddingTop:24, borderTop:`1px solid ${C.gray200}`, marginTop:24 }}>
+          <div style={{ position:"sticky", bottom:0, display:"flex", justifyContent:"flex-end", gap:8, paddingTop:16, paddingBottom:24, borderTop:`1px solid ${C.gray200}`, marginTop:24, background:C.gray50, zIndex:10 }}>
             <Btn variant="outline" onClick={tryBack}>Close</Btn>
             {tab === "availability"
               ? <Btn onClick={()=>save(true)}>Publish</Btn>
@@ -3104,9 +3105,12 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
   const [showDiscard, setShowDiscard] = useState(false);
   function tryBack() { setShowDiscard(true); }
 
-  function save() {
+  async function save() {
     if (!form.title.trim()) { toast({ type:"error", title:"Title required", message:"Please add a session title before saving." }); return; }
-    if (onSave) onSave(session.id, form, sectionsRef.current);
+    if (onSave) {
+      const ok = await onSave(session.id, form, sectionsRef.current);
+      if (ok === false) return;
+    }
     toast({ type:"success", title:"Changes saved", message:`"${form.title}" has been updated.` });
     setTimeout(onBack, 1200);
   }
@@ -3205,7 +3209,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
           </div>
           <div style={{ padding:"0 16px 24px" }}>
             {renderTabContent()}
-            <div className="aes-actions" style={{ display:"flex", justifyContent:"flex-end", gap:8, paddingTop:24, borderTop:`1px solid ${C.gray200}`, marginTop:24 }}>
+            <div className="aes-actions" style={{ position:"sticky", bottom:0, display:"flex", justifyContent:"flex-end", gap:8, paddingTop:16, paddingBottom:16, borderTop:`1px solid ${C.gray200}`, marginTop:24, background:C.gray50, zIndex:10 }}>
               <Btn variant="outline" onClick={tryBack}>Close</Btn>
               {tab === "availability"
                 ? <Btn onClick={save}>Save Changes</Btn>
@@ -3253,7 +3257,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
           </div>
 
           {/* Actions */}
-          <div style={{ display:"flex", justifyContent:"flex-end", gap:8, paddingTop:24, borderTop:`1px solid ${C.gray200}`, marginTop:24 }}>
+          <div style={{ position:"sticky", bottom:0, display:"flex", justifyContent:"flex-end", gap:8, paddingTop:16, paddingBottom:24, borderTop:`1px solid ${C.gray200}`, marginTop:24, background:C.gray50, zIndex:10 }}>
             <Btn variant="outline" onClick={tryBack}>Close</Btn>
             {tab === "availability"
               ? <Btn onClick={save}>Save Changes</Btn>
@@ -4064,7 +4068,6 @@ export default function App() {
   }
 
   async function addAdminSession(form, publish, sections) {
-    const newId = Date.now();
     const lessons = sections && sections.length
       ? sections.flatMap(sec => sec.lessons.map(l => ({
           sectionTitle: sec.title, title: l.title,
@@ -4075,7 +4078,7 @@ export default function App() {
       : [{ sectionTitle:"Session", title:"Full Session", duration:"60:00", status: publish ? "available" : "draft", type:"video", vimeoUrl: form.vimeoUrl || "" }];
 
     const supabaseEntry = {
-      id: newId, title: form.title, category: form.category || "SPED",
+      title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
       linkedin: form.linkedin || "", twitter: form.twitter || "",
       instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
@@ -4090,10 +4093,11 @@ export default function App() {
     if (error) {
       console.error("[addAdminSession] error:", error);
       toast({ type:"error", title:"Save failed", message: error.message });
-      return;
+      return false;
     }
 
     await fetchSessions();
+    return true;
   }
 
   async function updateSession(id, form, sections) {
@@ -4117,7 +4121,7 @@ export default function App() {
       ...(form.quiz_questions ? { quiz_questions: form.quiz_questions } : {}),
     };
     const { error } = await supabase.from("sessions").update(supabaseUpdate).eq("id", id);
-    if (error) { toast({ type:"error", title:"Update failed", message: error.message }); return; }
+    if (error) { toast({ type:"error", title:"Update failed", message: error.message }); return false; }
 
     setSessions(prev => prev.map(s => s.id === id ? {
       ...s, title: form.title, category: form.category, instructor: form.instructorName,
