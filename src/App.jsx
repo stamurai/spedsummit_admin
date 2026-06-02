@@ -2934,47 +2934,6 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 </div>
               </div>
 
-              {/* Engagement */}
-              <div style={{ marginTop:24 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Engagement</div>
-                <div style={{ border:`1px solid ${C.gray200}`, borderRadius:14, overflow:"hidden" }}>
-                  {[
-                    { key:"certificate", label:"Certificate",    desc:"Send a certificate on completion." },
-                    { key:"spinWheel",   label:"Spin the Wheel", desc:"Enable reward spin activity." },
-                  ].map((item, i, arr) => (
-                    <div key={item.key} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, padding:"16px 20px", borderBottom: i < arr.length-1 ? `1px solid ${C.gray200}` : "none", background:C.white }}>
-                      <div>
-                        <div style={{ fontSize:14, fontWeight:600, color:C.gray900 }}>{item.label}</div>
-                        <div style={{ fontSize:12, color:C.gray500, marginTop:2 }}>{item.desc}</div>
-                      </div>
-                      <Toggle fieldKey={item.key}/>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Community */}
-              <div style={{ marginTop:20 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Community</div>
-                <div style={{ border:`1px solid ${C.gray200}`, borderRadius:14, overflow:"hidden" }}>
-                  {[
-                    { val:"visible", label:"Visible", desc:"Comments shown, new ones allowed." },
-                    { val:"hidden",  label:"Hidden",  desc:"No comments shown or accepted." },
-                    { val:"locked",  label:"Locked",  desc:"Existing shown, no new comments." },
-                  ].map((opt, i, arr) => (
-                    <div key={opt.val} onClick={()=>upd("commentVisibility", opt.val)}
-                      style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, padding:"16px 20px", borderBottom: i < arr.length-1 ? `1px solid ${C.gray200}` : "none", background:C.white, cursor:"pointer" }}>
-                      <div>
-                        <div style={{ fontSize:14, fontWeight:600, color:C.gray900 }}>{opt.label}</div>
-                        <div style={{ fontSize:12, color:C.gray500, marginTop:2 }}>{opt.desc}</div>
-                      </div>
-                      <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${form.commentVisibility===opt.val ? C.primary : C.gray300}`, background: form.commentVisibility===opt.val ? C.primary : C.white, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        {form.commentVisibility===opt.val && <div style={{ width:6, height:6, borderRadius:"50%", background:"#fff" }}/>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </>}
 
             {/* ── AVAILABILITY tab ── */}
@@ -3322,48 +3281,6 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                 </div>
               </div>
 
-              {/* Engagement */}
-              <div style={{ marginTop:24 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Engagement</div>
-                <div style={{ border:`1px solid ${C.gray200}`, borderRadius:14, overflow:"hidden" }}>
-                  {[
-                    { key:"certificate", label:"Certificate",      desc:"Send a certificate on completion." },
-                    { key:"discussion",  label:"Discussion Forum",  desc:"Allow students to discuss with peers." },
-                    { key:"qa",          label:"Q&A Section",       desc:"Moderate and answer student questions." },
-                  ].map((item, i, arr) => (
-                    <div key={item.key} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, padding:"16px 20px", borderBottom: i < arr.length-1 ? `1px solid ${C.gray200}` : "none", background:C.white }}>
-                      <div>
-                        <div style={{ fontSize:14, fontWeight:600, color:C.gray900 }}>{item.label}</div>
-                        <div style={{ fontSize:12, color:C.gray500, marginTop:2 }}>{item.desc}</div>
-                      </div>
-                      <Toggle fieldKey={item.key}/>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Community */}
-              <div style={{ marginTop:20 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Community</div>
-                <div style={{ border:`1px solid ${C.gray200}`, borderRadius:14, overflow:"hidden" }}>
-                  {[
-                    { val:"visible", label:"Visible", desc:"Comments shown, new ones allowed." },
-                    { val:"hidden",  label:"Hidden",  desc:"No comments shown or accepted." },
-                    { val:"locked",  label:"Locked",  desc:"Existing shown, no new comments." },
-                  ].map((opt, i, arr) => (
-                    <div key={opt.val} onClick={()=>upd("commentVisibility", opt.val)}
-                      style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, padding:"16px 20px", borderBottom: i < arr.length-1 ? `1px solid ${C.gray200}` : "none", background:C.white, cursor:"pointer" }}>
-                      <div>
-                        <div style={{ fontSize:14, fontWeight:600, color:C.gray900 }}>{opt.label}</div>
-                        <div style={{ fontSize:12, color:C.gray500, marginTop:2 }}>{opt.desc}</div>
-                      </div>
-                      <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${form.commentVisibility===opt.val ? C.primary : C.gray300}`, background: form.commentVisibility===opt.val ? C.primary : C.white, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        {form.commentVisibility===opt.val && <div style={{ width:6, height:6, borderRadius:"50%", background:"#fff" }}/>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </>}
 
             {/* ── AVAILABILITY tab ── */}
