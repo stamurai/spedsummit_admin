@@ -2857,7 +2857,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
         <div style={{ width:1, background:C.gray200, flexShrink:0, alignSelf:"stretch" }}/>
 
         {/* ── Content ── */}
-        <div style={{ flex:1, minWidth:0, padding:"32px 28px", boxSizing:"border-box", display:"flex", flexDirection:"column" }}>
+        <div style={{ flex:1, minWidth:0, padding:"32px 28px", boxSizing:"border-box", display:"flex", flexDirection:"column", minHeight:"100vh" }}>
           <div style={{ marginBottom:24 }}>
             <h2 style={{ margin:"0 0 4px", fontSize:18, fontWeight:900, color:C.gray900 }}>{TAB_META[tab].title}</h2>
             <p style={{ margin:0, fontSize:13, color:C.gray500 }}>{TAB_META[tab].subtitle}</p>
@@ -3246,7 +3246,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
         <div style={{ width:1, background:C.gray200, flexShrink:0, alignSelf:"stretch" }}/>
 
         {/* ── Content ── */}
-        <div style={{ flex:1, minWidth:0, padding:"32px 28px", boxSizing:"border-box", display:"flex", flexDirection:"column" }}>
+        <div style={{ flex:1, minWidth:0, padding:"32px 28px", boxSizing:"border-box", display:"flex", flexDirection:"column", minHeight:"100vh" }}>
           <div style={{ marginBottom:24 }}>
             <h2 style={{ margin:"0 0 4px", fontSize:18, fontWeight:900, color:C.gray900 }}>{TAB_META[tab].title}</h2>
             <p style={{ margin:0, fontSize:13, color:C.gray500 }}>{TAB_META[tab].subtitle}</p>
