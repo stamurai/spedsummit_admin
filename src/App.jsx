@@ -2836,7 +2836,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
       <div className="acs-desktop">
 
         {/* ── Sidebar ── */}
-        <div style={{ width:240, flexShrink:0, padding:"32px 24px", boxSizing:"border-box" }}>
+        <div style={{ width:240, flexShrink:0, padding:"32px 24px", boxSizing:"border-box", position:"sticky", top:0, alignSelf:"flex-start" }}>
           <h2 style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:C.gray900 }}>Create Session</h2>
           <p style={{ margin:"0 0 28px", fontSize:13, color:C.gray500, lineHeight:1.5 }}>Fill in the details, build your lessons, then publish.</p>
           <nav style={{ display:"flex", flexDirection:"column", gap:2 }}>
@@ -3224,7 +3224,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
       <div className="aes-desktop">
 
         {/* ── Sidebar ── */}
-        <div style={{ width:240, flexShrink:0, padding:"32px 24px", boxSizing:"border-box" }}>
+        <div style={{ width:240, flexShrink:0, padding:"32px 24px", boxSizing:"border-box", position:"sticky", top:0, alignSelf:"flex-start" }}>
           <h2 style={{ margin:"0 0 4px", fontSize:18, fontWeight:900, color:C.gray900 }}>Edit Session</h2>
           <p style={{ margin:"0 0 4px", fontSize:12, color:C.gray500, lineHeight:1.4, overflow:"hidden", textOverflow:"ellipsis", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{session.title}</p>
           <p style={{ margin:"0 0 28px", fontSize:13, color:C.gray500 }}></p>
