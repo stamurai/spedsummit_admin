@@ -3995,7 +3995,7 @@ export default function App() {
       : [{ sectionTitle:"Session", title:"Full Session", duration:"60:00", status: publish ? "available" : "draft", type:"video", vimeoUrl: form.vimeoUrl || "" }];
 
     const supabaseEntry = {
-      title: form.title, category: form.category || "SPED",
+      id: Date.now(), title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
       linkedin: form.linkedin || "", twitter: form.twitter || "",
       instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
