@@ -849,7 +849,7 @@ function MobileSearchPage({ onOpenSession, onNavigate, onClose, sessions = [] })
             {instructorResults.map(s => (
               <button key={s.instructor} onClick={() => pick(() => onOpenSession(s))}
                 style={{ width:"100%", display:"flex", alignItems:"center", gap:12, padding:"12px 4px", background:"none", border:"none", cursor:"pointer", borderBottom:`1px solid ${C.gray100}`, textAlign:"left" }}>
-                <Avatar name={s.instructor} src={INSTRUCTOR_AVATARS[s.instructor]} size={32}/>
+                <Avatar name={s.instructor} src={s.instructorImage || INSTRUCTOR_AVATARS[s.instructor]} size={32}/>
                 <div>
                   <div style={{ fontSize:14, fontWeight:600, color:C.gray800 }}>{s.instructor}</div>
                   <div style={{ fontSize:12, color:C.gray400 }}>{s.category}</div>
@@ -977,7 +977,7 @@ function SearchBar({ onOpenSession, onNavigate, isAdmin = false, sessions = [] }
                   style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"10px 14px", background:"none", border:"none", cursor:"pointer", textAlign:"left" }}
                   onMouseEnter={e => e.currentTarget.style.background = C.gray50}
                   onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                  <Avatar name={s.instructor} src={INSTRUCTOR_AVATARS[s.instructor]} size={28}/>
+                  <Avatar name={s.instructor} src={s.instructorImage || INSTRUCTOR_AVATARS[s.instructor]} size={28}/>
                   <div>
                     <div style={{ fontSize:14, fontWeight:600, color:C.gray800 }}>{s.instructor}</div>
                     <div style={{ fontSize:12, color:C.gray400 }}>{s.category}</div>
@@ -2896,13 +2896,6 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
                   <Label>COURSE TITLE<span style={{ color:C.error }}> *</span></Label>
                   <input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Advanced Figma Auto-Layout Masterclass" style={{...inputSt, marginBottom:16}}/>
-                  <Label>THUMBNAIL</Label>
-                  <UploadZone accept="image/*" label="Upload thumbnail" hint="16:9 recommended (JPG, PNG)" icon="image" preview={form.thumbnail}
-                    onFile={async file => {
-                      const path = `thumbnails/${Date.now()}-${file.name}`;
-                      const { error } = await supabase.storage.from("session-resources").upload(path, file);
-                      if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("thumbnail", data.publicUrl); }
-                    }} aspect="16/9" height={160}/>
                   <div style={{ marginTop:16 }}>
                   <Label>DESCRIPTION</Label>
                   <textarea value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder="Describe what learners will gain from this session…" rows={3} style={{...inputSt,resize:"vertical"}}/>
@@ -3243,13 +3236,6 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
                   <Label>SESSION TITLE<span style={{ color:C.error }}> *</span></Label>
                   <input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Advanced Figma Auto-Layout Masterclass" style={{...inputSt, marginBottom:16}}/>
-                  <Label>THUMBNAIL</Label>
-                  <UploadZone accept="image/*" label="Upload thumbnail" hint="16:9 recommended (JPG, PNG)" icon="image" preview={form.thumbnail}
-                    onFile={async file => {
-                      const path = `thumbnails/${Date.now()}-${file.name}`;
-                      const { error } = await supabase.storage.from("session-resources").upload(path, file);
-                      if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("thumbnail", data.publicUrl); }
-                    }} aspect="16/9" height={160}/>
                   <div style={{ marginTop:16 }}>
                   <Label>DESCRIPTION</Label>
                   <textarea value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder="Describe what students will learn…" rows={3} style={{...inputSt,resize:"vertical"}}/>
