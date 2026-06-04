@@ -3007,7 +3007,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <UploadZone accept="image/*" icon="user-circle" preview={form.instructorImage}
                   onFile={async file => {
                     const path = `instructors/${Date.now()}-${file.name}`;
-                    const { error } = await supabase.storage.from("session-resources").upload(path, file);
+                    const { error } = await supabase.storage.from("session-resources").upload(path, file, { upsert: true });
                     if (error) { toast({ type:"error", title:"Photo upload failed", message: error.message }); return; }
                     const { data } = supabase.storage.from("session-resources").getPublicUrl(path);
                     upd("instructorImage", data.publicUrl);
@@ -3350,7 +3350,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                   <UploadZone accept="image/*" label="Upload photo" hint="Square image recommended" icon="user-circle" preview={form.instructorImage}
                     onFile={async file => {
                       const path = `instructors/${Date.now()}-${file.name}`;
-                      const { error } = await supabase.storage.from("session-resources").upload(path, file);
+                      const { error } = await supabase.storage.from("session-resources").upload(path, file, { upsert: true });
                       if (error) { toast({ type:"error", title:"Photo upload failed", message: error.message }); return; }
                       const { data } = supabase.storage.from("session-resources").getPublicUrl(path);
                       upd("instructorImage", data.publicUrl);
