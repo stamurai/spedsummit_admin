@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabase.js";
 import * as PhosphorIcons from "@phosphor-icons/react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const ICON_MAP = {
   house: PhosphorIcons.House,
@@ -2060,28 +2061,10 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
         }
       `}</style>
       {(() => {
-        const lineData = trend;
-        const hasData  = lineData.some(d => d.v > 0);
-        const maxL = Math.max(...lineData.map(d => d.v), 4);
-        const W = 660, H = 160, PAD = { t:16, r:20, b:28, l:44 };
-        const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
-        const xOf = i => PAD.l + (i / (lineData.length - 1)) * cw;
-        const yOf = v => PAD.t + ch - (v / maxL) * ch;
-        const pts = lineData.map((d,i) => [xOf(i), yOf(d.v)]);
-        const linePth = pts.reduce((acc,[x,y],i) => {
-          if (i===0) return `M${x},${y}`;
-          const [px,py]=pts[i-1]; const cpx=(px+x)/2;
-          return `${acc} C${cpx},${py} ${cpx},${y} ${x},${y}`;
-        }, "");
-        const areaPth = `${linePth} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
-        const yTicks  = [0,0.25,0.5,0.75,1].map(r => ({ v:Math.round(r*maxL), y:PAD.t+ch-r*ch }));
-        const xIdxs   = lineData.length <= 7
-          ? lineData.map((_,i) => i)
-          : [0, Math.floor((lineData.length-1)/3), Math.floor((lineData.length-1)*2/3), lineData.length-1];
-
+        const chartData = trend.map(d => ({ label: d.label, views: d.v }));
+        const hasData   = chartData.some(d => d.views > 0);
         return (
           <div style={{ width:"100%", background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:"20px 20px 16px", marginBottom:14 }}>
-            {/* Header */}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
               <div>
                 <div style={{ fontSize:15, fontWeight:700, color:C.gray900 }}>Views over time</div>
@@ -2092,39 +2075,27 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
                 <div style={{ fontSize:12, color:C.gray500, marginTop:3 }}>total views</div>
               </div>
             </div>
-
-            {/* Chart */}
             {!hasData ? (
-              <div style={{ height:160, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
+              <div style={{ height:180, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
                 <Icon name="chart-line" size={28} color={C.gray300}/>
                 <div style={{ fontSize:13, color:C.gray400 }}>No views yet in this period</div>
               </div>
             ) : (
-              <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible", marginLeft:-8 }}>
-                <defs>
-                  <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.primary} stopOpacity="0.15"/>
-                    <stop offset="100%" stopColor={C.primary} stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-                {yTicks.map((t,i) => (
-                  <g key={i}>
-                    <line x1={PAD.l} y1={t.y} x2={W-PAD.r} y2={t.y} stroke={C.gray100} strokeWidth="1"/>
-                    <text x={PAD.l-6} y={t.y+4} textAnchor="end" fontSize="9" fill={C.gray400} fontFamily="Inter,sans-serif">{t.v}</text>
-                  </g>
-                ))}
-                <path d={areaPth} fill="url(#aa-grad)"/>
-                <path d={linePth} fill="none" stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                {pts.map(([x,y],i) => lineData[i].v > 0 && (
-                  <g key={i}>
-                    <circle cx={x} cy={y} r="4" fill={C.white} stroke={C.primary} strokeWidth="2.5"/>
-                    <title>{lineData[i].label}: {lineData[i].v}</title>
-                  </g>
-                ))}
-                {xIdxs.map(i => (
-                  <text key={i} x={xOf(i)} y={H-4} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{lineData[i].label}</text>
-                ))}
-              </svg>
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={chartData} margin={{ top:8, right:8, left:-10, bottom:0 }}>
+                  <defs>
+                    <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor={C.primary} stopOpacity={0.18}/>
+                      <stop offset="95%" stopColor={C.primary} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.gray100} vertical={false}/>
+                  <XAxis dataKey="label" tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} interval="preserveStartEnd"/>
+                  <YAxis tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} allowDecimals={false}/>
+                  <Tooltip contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif" }} labelStyle={{ fontWeight:700, color:C.gray900 }} itemStyle={{ color:C.primary }}/>
+                  <Area type="monotone" dataKey="views" stroke={C.primary} strokeWidth={2.5} fill="url(#aa-grad)" dot={false} activeDot={{ r:5, fill:C.primary, stroke:C.white, strokeWidth:2 }}/>
+                </AreaChart>
+              </ResponsiveContainer>
             )}
           </div>
         );
@@ -2249,19 +2220,8 @@ function SessionAnalyticsPage({ session, onBack }) {
     return { v: count, label: day.toLocaleDateString("en-US", { month:"short", day:"numeric" }) };
   });
 
-  const hasData = trend.some(d => d.v > 0);
-  const maxV = Math.max(...trend.map(d => d.v), 4);
-  const W = 600, H = 160, PAD = { t:20, r:20, b:28, l:36 };
-  const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
-  const pts = trend.map((d, i) => [PAD.l + (i / (trend.length - 1)) * cw, PAD.t + ch - (d.v / maxV) * ch]);
-  const linePath = pts.reduce((acc, [x, y], i) => {
-    if (i === 0) return `M${x},${y}`;
-    const [px, py] = pts[i - 1]; const cpx = (px + x) / 2;
-    return `${acc} C${cpx},${py} ${cpx},${y} ${x},${y}`;
-  }, "");
-  const areaPath = `${linePath} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
-  const xLabels = [0, 7, 14, 21, 29].map(i => ({ l: trend[i].label, x: pts[i][0] }));
-  const yTicks  = [0, 0.25, 0.5, 0.75, 1].map(r => ({ v: Math.round(r * maxV), y: PAD.t + ch - r * ch }));
+  const hasData   = trend.some(d => d.v > 0);
+  const chartData = trend.map(d => ({ label: d.label, views: d.v }));
 
   return (
     <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
@@ -2300,40 +2260,28 @@ function SessionAnalyticsPage({ session, onBack }) {
           <div style={{ fontSize:22, fontWeight:900, color:C.gray900 }}>{loading ? "—" : totalViews}</div>
         </div>
         {loading ? (
-          <div style={{ height:160, display:"flex", alignItems:"center", justifyContent:"center", color:C.gray400, fontSize:13 }}>Loading…</div>
+          <div style={{ height:180, display:"flex", alignItems:"center", justifyContent:"center", color:C.gray400, fontSize:13 }}>Loading…</div>
         ) : !hasData ? (
-          <div style={{ height:160, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8 }}>
-            <Icon name="chart-line" size={32} color={C.gray300}/>
+          <div style={{ height:180, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
+            <Icon name="chart-line" size={28} color={C.gray300}/>
             <div style={{ fontSize:13, color:C.gray400 }}>No views yet for this session</div>
           </div>
         ) : (
-          <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
-            <defs>
-              <linearGradient id="sa-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={C.primary} stopOpacity="0.15"/>
-                <stop offset="100%" stopColor={C.primary} stopOpacity="0"/>
-              </linearGradient>
-            </defs>
-            {/* Grid lines + Y labels */}
-            {yTicks.map((t, i) => (
-              <g key={i}>
-                <line x1={PAD.l} y1={t.y} x2={W - PAD.r} y2={t.y} stroke={C.gray100} strokeWidth="1"/>
-                <text x={PAD.l - 6} y={t.y + 4} textAnchor="end" fontSize="9" fill={C.gray400} fontFamily="Inter,sans-serif">{t.v}</text>
-              </g>
-            ))}
-            {/* Area */}
-            <path d={areaPath} fill="url(#sa-grad)"/>
-            {/* Line */}
-            <path d={linePath} fill="none" stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            {/* Dots only on non-zero points */}
-            {pts.map(([x, y], i) => trend[i].v > 0 && (
-              <circle key={i} cx={x} cy={y} r="4" fill={C.white} stroke={C.primary} strokeWidth="2.5"/>
-            ))}
-            {/* X labels */}
-            {xLabels.map((l, i) => (
-              <text key={i} x={l.x} y={H - 4} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{l.l}</text>
-            ))}
-          </svg>
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={chartData} margin={{ top:8, right:8, left:-10, bottom:0 }}>
+              <defs>
+                <linearGradient id="sa-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor={C.primary} stopOpacity={0.18}/>
+                  <stop offset="95%" stopColor={C.primary} stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.gray100} vertical={false}/>
+              <XAxis dataKey="label" tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} interval="preserveStartEnd"/>
+              <YAxis tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} allowDecimals={false}/>
+              <Tooltip contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif" }} labelStyle={{ fontWeight:700, color:C.gray900 }} itemStyle={{ color:C.primary }}/>
+              <Area type="monotone" dataKey="views" stroke={C.primary} strokeWidth={2.5} fill="url(#sa-grad)" dot={false} activeDot={{ r:5, fill:C.primary, stroke:C.white, strokeWidth:2 }}/>
+            </AreaChart>
+          </ResponsiveContainer>
         )}
       </div>
 
