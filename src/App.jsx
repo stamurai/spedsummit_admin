@@ -1927,10 +1927,29 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
     setLoading(true);
     const days = range === "7d" ? 7 : range === "28d" ? 28 : 90;
     const since = new Date(Date.now() - days * 86400000).toISOString();
+
     supabase.from("video_views").select("*").gte("created_at", since).then(({ data }) => {
       setViews(data || []);
       setLoading(false);
     });
+
+    const channel = supabase
+      .channel("video_views_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "video_views" }, payload => {
+        if (payload.eventType === "INSERT") {
+          const row = payload.new;
+          if (new Date(row.created_at) >= new Date(since)) {
+            setViews(prev => [...prev, row]);
+          }
+        } else if (payload.eventType === "UPDATE") {
+          setViews(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
+        } else if (payload.eventType === "DELETE") {
+          setViews(prev => prev.filter(r => r.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [range]);
 
   const totalViews    = views.length;
