@@ -4132,10 +4132,16 @@ export default function App() {
     setSessions(prev => prev.map(s => s.id === id ? {
       ...s, title: form.title, category: form.category, instructor: form.instructorName,
       instructorBio: form.bio, description: form.desc, vimeoUrl: form.vimeoUrl,
+      instructorImage: form.instructorImage || "",
       availableFrom: form.availableFrom, availableTo: form.availableTo,
       ...(updatedLessons ? { lessons: updatedLessons } : {}),
     } : s));
-    setAdminSessions(prev => prev.map(s => s.id === id ? { ...s, title: form.title, category: form.category, instructor: form.instructorName, vimeoUrl: form.vimeoUrl, availableFrom: form.availableFrom, availableTo: form.availableTo } : s));
+    setAdminSessions(prev => prev.map(s => s.id === id ? {
+      ...s, title: form.title, category: form.category, instructor: form.instructorName,
+      instructorImage: form.instructorImage || "",
+      vimeoUrl: form.vimeoUrl, availableFrom: form.availableFrom, availableTo: form.availableTo,
+    } : s));
+    await fetchSessions();
   }
 
   function renderPage() {
