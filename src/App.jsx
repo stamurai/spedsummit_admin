@@ -1910,7 +1910,7 @@ function MiniBarChart48({ data }) {
   );
 }
 
-function AnalyticsPage({ onEditSession, sessions = [] }) {
+function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] }) {
   const [range,     setRange]     = useState("28d");
   const [showRange, setShowRange] = useState(false);
   const [views,     setViews]     = useState([]);
@@ -2182,7 +2182,7 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
             const grads = ["linear-gradient(135deg,#1e3a5f,#3699ff)","linear-gradient(135deg,#4c1d95,#a855f7)","linear-gradient(135deg,#166534,#50cd89)","linear-gradient(135deg,#7c2d12,#f97316)"];
             return (
               <div key={i}
-                onClick={() => onEditSession?.(s)}
+                onClick={() => onOpenSessionAnalytics?.(s)}
                 style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px", gap:"0 10px",
                   padding:"10px 0", borderBottom:i<sessionStats.length-1?`1px solid ${C.gray100}`:"none",
                   alignItems:"center", cursor:"pointer", borderRadius:8 }}
@@ -2240,6 +2240,136 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
   );
 }
 
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SESSION ANALYTICS PAGE
+───────────────────────────────────────────────────────────────────────────── */
+function SessionAnalyticsPage({ session, onBack }) {
+  const [views, setViews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase.from("video_views").select("*").eq("session_id", session.id).then(({ data }) => {
+      setViews(data || []);
+      setLoading(false);
+    });
+
+    const channel = supabase
+      .channel(`session_analytics_${session.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "video_views", filter: `session_id=eq.${session.id}` }, payload => {
+        if (payload.eventType === "INSERT") setViews(prev => [...prev, payload.new]);
+        else if (payload.eventType === "UPDATE") setViews(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
+        else if (payload.eventType === "DELETE") setViews(prev => prev.filter(r => r.id !== payload.old.id));
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [session.id]);
+
+  const totalViews    = views.length;
+  const watchHrs      = Math.round(views.reduce((s, r) => s + (r.watched_seconds || 0), 0) / 3600);
+  const watchMins     = Math.round(views.reduce((s, r) => s + (r.watched_seconds || 0), 0) / 60);
+  const completions   = views.filter(r => r.completed).length;
+  const completionPct = totalViews > 0 ? Math.round((completions / totalViews) * 100) : 0;
+  const avgWatchSecs  = totalViews > 0 ? Math.round(views.reduce((s, r) => s + (r.watched_seconds || 0), 0) / totalViews) : 0;
+  const avgMins       = Math.floor(avgWatchSecs / 60);
+  const avgSecs       = avgWatchSecs % 60;
+
+  // Daily trend (last 30 days)
+  const trend = Array.from({ length: 30 }, (_, i) => {
+    const day = new Date(Date.now() - (29 - i) * 86400000);
+    const next = new Date(Date.now() - (28 - i) * 86400000);
+    const count = views.filter(r => { const d = new Date(r.created_at); return d >= day && d < next; }).length;
+    return { v: count, label: day.toLocaleDateString("en-US", { month:"short", day:"numeric" }) };
+  });
+
+  const maxV = Math.max(...trend.map(d => d.v), 1);
+  const W = 600, H = 110, PAD = { t:10, r:4, b:24, l:4 };
+  const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
+  const pts = trend.map((d, i) => [PAD.l + (i / (trend.length - 1)) * cw, PAD.t + ch - (d.v / maxV) * ch]);
+  const linePath = pts.reduce((acc, [x, y], i) => {
+    if (i === 0) return `M${x},${y}`;
+    const [px, py] = pts[i - 1]; const cpx = (px + x) / 2;
+    return `${acc} C${cpx},${py} ${cpx},${y} ${x},${y}`;
+  }, "");
+  const areaPath = `${linePath} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
+  const xLabels = [0, 14, 29].map(i => ({ l: trend[i].label, x: pts[i][0] }));
+
+  return (
+    <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
+      <button onClick={onBack} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", color:C.gray500, fontSize:13, fontWeight:600, fontFamily:"inherit", marginBottom:20, padding:0 }}>
+        <Icon name="arrow-left" size={16} color={C.gray500}/> Back to Analytics
+      </button>
+
+      <div style={{ marginBottom:24 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.8, textTransform:"uppercase", marginBottom:4 }}>{session.category}</div>
+        <h1 style={{ margin:"0 0 4px", fontSize:22, fontWeight:900, color:C.gray900, letterSpacing:-0.3 }}>{session.title}</h1>
+        <div style={{ fontSize:13, color:C.gray500 }}>{session.instructor}</div>
+      </div>
+
+      {/* Metric cards */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:20 }}>
+        {[
+          { label:"Total Views",       val: loading ? "—" : totalViews.toLocaleString() },
+          { label:"Completions",        val: loading ? "—" : completions.toLocaleString() },
+          { label:"Completion Rate",    val: loading ? "—" : `${completionPct}%` },
+          { label:"Avg Watch Time",     val: loading ? "—" : `${avgMins}:${String(avgSecs).padStart(2,"0")}` },
+        ].map(m => (
+          <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
+            <div style={{ fontSize:28, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{m.val}</div>
+            <div style={{ fontSize:13, fontWeight:600, color:C.gray500 }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Views over time chart */}
+      <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20, marginBottom:20 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:16 }}>Views over time — last 30 days</div>
+        {loading ? <div style={{ height:110, display:"flex", alignItems:"center", justifyContent:"center", color:C.gray400, fontSize:13 }}>Loading…</div> : (
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block" }}>
+            <defs>
+              <linearGradient id="sa-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={C.primary} stopOpacity="0.18"/>
+                <stop offset="100%" stopColor={C.primary} stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d={areaPath} fill="url(#sa-grad)"/>
+            <path d={linePath} fill="none" stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="3" fill={C.white} stroke={C.primary} strokeWidth="2"/>)}
+            {xLabels.map((l, i) => <text key={i} x={l.x} y={H - 4} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{l.l}</text>)}
+          </svg>
+        )}
+      </div>
+
+      {/* Recent views table */}
+      <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:16 }}>Recent Views</div>
+        {loading ? <div style={{ color:C.gray400, fontSize:13 }}>Loading…</div> : views.length === 0 ? (
+          <div style={{ color:C.gray400, fontSize:13 }}>No views yet.</div>
+        ) : (
+          <>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 80px 70px", gap:"0 12px", padding:"4px 0 8px", borderBottom:`1px solid ${C.gray100}`, marginBottom:4 }}>
+              {["User","Watched","Total","Done"].map(h => <span key={h} style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.8, textTransform:"uppercase" }}>{h}</span>)}
+            </div>
+            {[...views].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0,10).map((r, i, arr) => {
+              const wm = Math.floor((r.watched_seconds||0)/60), ws = (r.watched_seconds||0)%60;
+              const tm = Math.floor((r.total_seconds||0)/60),   ts = (r.total_seconds||0)%60;
+              return (
+                <div key={r.id} style={{ display:"grid", gridTemplateColumns:"1fr 80px 80px 70px", gap:"0 12px", padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${C.gray100}`:"none", alignItems:"center" }}>
+                  <span style={{ fontSize:13, color:C.gray700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.user_id || "Anonymous"}</span>
+                  <span style={{ fontSize:13, color:C.gray600 }}>{wm}:{String(ws).padStart(2,"0")}</span>
+                  <span style={{ fontSize:13, color:C.gray600 }}>{tm}:{String(ts).padStart(2,"0")}</span>
+                  <span style={{ fontSize:12, fontWeight:700, color: r.completed ? "#10b981" : C.gray400 }}>{r.completed ? "✓ Yes" : "No"}</span>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ADMIN CREATE SESSION
@@ -3801,6 +3931,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem("isAdmin") === "1");
   const [isDark, setIsDark] = useState(() => { const h = new Date().getHours(); return h >= 19 || h < 6; });
   const [editingSession, setEditingSession] = useState(null);
+  const [analyticsSession, setAnalyticsSession] = useState(null);
   const { toasts, toast, remove } = useToast();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -4063,7 +4194,8 @@ export default function App() {
     if (page==="admin-sessions") return <AdminSessionsPage onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions} setAdminSessions={setAdminSessions}/>;
     if (page==="admin-create") return <AdminCreateSession onBack={()=>nav("admin-sessions")} toast={toast} onSave={addAdminSession}/>;
     if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
-    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} sessions={sessions}/>;
+    if (page==="admin-analytics" && analyticsSession) return <SessionAnalyticsPage session={analyticsSession} onBack={() => setAnalyticsSession(null)}/>;
+    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => setAnalyticsSession(s)} sessions={sessions}/>;
     if (page==="admin-profile") return <AdminProfilePage onBack={()=>nav("admin-overview")} userName={userName} userEmail={userEmail} userAvatar={userAvatar}/>;
     return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions}/>;
   }
