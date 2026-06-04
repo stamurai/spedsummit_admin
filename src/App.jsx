@@ -2061,106 +2061,71 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
       `}</style>
       {(() => {
         const lineData = trend;
-        const barData  = trend.map(d => ({ v: d.v, l: d.label.split(" ")[0] }));
-        const maxV = Math.max(...barData.map(d => d.v));
-        const maxL = Math.max(...lineData.map(d => d.v));
-        const minL = Math.min(...lineData.map(d => d.v));
-
-        /* SVG line/area chart helpers */
-        const W = 600, H = 130, PAD = { t:16, r:4, b:28, l:4 };
-        const cw = W - PAD.l - PAD.r;
-        const ch = H - PAD.t - PAD.b;
+        const hasData  = lineData.some(d => d.v > 0);
+        const maxL = Math.max(...lineData.map(d => d.v), 4);
+        const W = 660, H = 160, PAD = { t:16, r:8, b:28, l:36 };
+        const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
         const xOf = i => PAD.l + (i / (lineData.length - 1)) * cw;
-        const yOf = v => PAD.t + ch - ((v - minL) / (maxL - minL || 1)) * ch;
-        /* smooth cubic bezier path */
+        const yOf = v => PAD.t + ch - (v / maxL) * ch;
         const pts = lineData.map((d,i) => [xOf(i), yOf(d.v)]);
-        const d = pts.reduce((acc,[x,y],i) => {
-          if (i === 0) return `M${x},${y}`;
-          const [px,py] = pts[i-1];
-          const cpx = (px+x)/2;
+        const linePth = pts.reduce((acc,[x,y],i) => {
+          if (i===0) return `M${x},${y}`;
+          const [px,py]=pts[i-1]; const cpx=(px+x)/2;
           return `${acc} C${cpx},${py} ${cpx},${y} ${x},${y}`;
         }, "");
-        const area = `${d} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
-
-        /* Y-axis grid lines */
-        const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({
-          v: Math.round(minL + r*(maxL-minL)),
-          y: PAD.t + ch - r*ch,
-        }));
-
-        /* X-axis labels: show first, middle, last */
-        const xLabels = lineData.length <= 7
-          ? lineData.map((d,i) => ({ l:d.label, x:xOf(i) }))
-          : [0, Math.floor((lineData.length-1)/2), lineData.length-1].map(i => ({ l:lineData[i].label, x:xOf(i) }));
+        const areaPth = `${linePth} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
+        const yTicks  = [0,0.25,0.5,0.75,1].map(r => ({ v:Math.round(r*maxL), y:PAD.t+ch-r*ch }));
+        const xIdxs   = lineData.length <= 7
+          ? lineData.map((_,i) => i)
+          : [0, Math.floor((lineData.length-1)/3), Math.floor((lineData.length-1)*2/3), lineData.length-1];
 
         return (
-          <div style={{ width:"100%", background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:"20px 20px 16px", marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <div style={{ width:"100%", background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:"20px 20px 16px", marginBottom:14 }}>
+            {/* Header */}
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
               <div>
-                <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:2 }}>Views over time</div>
-                <div style={{ fontSize:11, color:C.gray400 }}>{activeRange.label}</div>
+                <div style={{ fontSize:15, fontWeight:700, color:C.gray900 }}>Views over time</div>
+                <div style={{ fontSize:12, color:C.gray400, marginTop:2 }}>{activeRange.label}</div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:32, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{loading ? "—" : stat.views.toLocaleString()}</div>
+                <div style={{ fontSize:12, color:C.gray500, marginTop:3 }}>total views</div>
               </div>
             </div>
 
-            {/* ── DESKTOP: line/area chart ── */}
-            <div className="aa-chart-desktop">
-              <div className="aa-chart-stat" style={{ borderColor:C.gray100 }}>
-                <div style={{ fontSize:36, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{loading ? "—" : stat.views.toLocaleString()}</div>
-                <div style={{ fontSize:12, color:C.gray500, marginTop:4, fontWeight:500 }}>total views</div>
+            {/* Chart */}
+            {!hasData ? (
+              <div style={{ height:160, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
+                <Icon name="chart-line" size={28} color={C.gray300}/>
+                <div style={{ fontSize:13, color:C.gray400 }}>No views yet in this period</div>
               </div>
-              <div className="aa-chart-line">
-                <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
-                  <defs>
-                    <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={C.primary} stopOpacity="0.18"/>
-                      <stop offset="100%" stopColor={C.primary} stopOpacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  {/* Grid lines */}
-                  {yTicks.map((t,i) => (
-                    <line key={i} x1={PAD.l} y1={t.y} x2={W-PAD.r} y2={t.y} stroke={C.gray100} strokeWidth="1"/>
-                  ))}
-                  {/* Area fill */}
-                  <path d={area} fill="url(#aa-grad)"/>
-                  {/* Line */}
-                  <path d={d} fill="none" stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  {/* Data points */}
-                  {pts.map(([x,y],i) => (
-                    <g key={i}>
-                      <circle cx={x} cy={y} r="4" fill={C.white} stroke={C.primary} strokeWidth="2.5"/>
-                      <title>{lineData[i].label}: {lineData[i].v}</title>
-                    </g>
-                  ))}
-                  {/* X labels */}
-                  {xLabels.map((l,i) => (
-                    <text key={i} x={l.x} y={H-4} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{l.l}</text>
-                  ))}
-                </svg>
-              </div>
-            </div>
-
-            {/* ── MOBILE: bar chart ── */}
-            <div className="aa-chart-mobile">
-              <div className="aa-chart-stat-m" style={{ borderColor:C.gray100 }}>
-                <div>
-                  <div style={{ fontSize:30, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{loading ? "—" : stat.views.toLocaleString()}</div>
-                  <div style={{ fontSize:12, color:C.gray500, marginTop:3, fontWeight:500 }}>total views</div>
-                </div>
-              </div>
-              <div key={range} style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:6, height:100 }}>
-                {barData.map((d, i) => {
-                  const pct = maxV > 0 ? Math.max((d.v / maxV) * 100, 8) : 8;
-                  const isMax = d.v === maxV;
-                  return (
-                    <div key={i} className="aa-bar-wrap" style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-end", gap:5, height:"100%", position:"relative" }}>
-                      <div className="aa-bar-tooltip" style={{ position:"absolute", top:-22, background:C.gray900, color:"#fff", fontSize:10, fontWeight:700, borderRadius:5, padding:"3px 6px", whiteSpace:"nowrap" }}>{d.v}</div>
-                      <div className="aa-bar" style={{ width:"100%", borderRadius:"5px 5px 3px 3px", background: isMax ? C.primary : "#b8ccf6", height:`${pct}%` }}/>
-                      <span style={{ fontSize:11, color:C.gray500, fontWeight:600 }}>{d.l}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            ) : (
+              <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
+                <defs>
+                  <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={C.primary} stopOpacity="0.15"/>
+                    <stop offset="100%" stopColor={C.primary} stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                {yTicks.map((t,i) => (
+                  <g key={i}>
+                    <line x1={PAD.l} y1={t.y} x2={W-PAD.r} y2={t.y} stroke={C.gray100} strokeWidth="1"/>
+                    <text x={PAD.l-6} y={t.y+4} textAnchor="end" fontSize="9" fill={C.gray400} fontFamily="Inter,sans-serif">{t.v}</text>
+                  </g>
+                ))}
+                <path d={areaPth} fill="url(#aa-grad)"/>
+                <path d={linePth} fill="none" stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                {pts.map(([x,y],i) => lineData[i].v > 0 && (
+                  <g key={i}>
+                    <circle cx={x} cy={y} r="4" fill={C.white} stroke={C.primary} strokeWidth="2.5"/>
+                    <title>{lineData[i].label}: {lineData[i].v}</title>
+                  </g>
+                ))}
+                {xIdxs.map(i => (
+                  <text key={i} x={xOf(i)} y={H-4} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{lineData[i].label}</text>
+                ))}
+              </svg>
+            )}
           </div>
         );
       })()}
