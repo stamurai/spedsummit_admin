@@ -2063,7 +2063,7 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
         const lineData = trend;
         const hasData  = lineData.some(d => d.v > 0);
         const maxL = Math.max(...lineData.map(d => d.v), 4);
-        const W = 660, H = 160, PAD = { t:16, r:8, b:28, l:36 };
+        const W = 660, H = 160, PAD = { t:16, r:20, b:28, l:36 };
         const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
         const xOf = i => PAD.l + (i / (lineData.length - 1)) * cw;
         const yOf = v => PAD.t + ch - (v / maxL) * ch;
@@ -2251,7 +2251,7 @@ function SessionAnalyticsPage({ session, onBack }) {
 
   const hasData = trend.some(d => d.v > 0);
   const maxV = Math.max(...trend.map(d => d.v), 4);
-  const W = 600, H = 160, PAD = { t:20, r:8, b:28, l:36 };
+  const W = 600, H = 160, PAD = { t:20, r:20, b:28, l:36 };
   const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
   const pts = trend.map((d, i) => [PAD.l + (i / (trend.length - 1)) * cw, PAD.t + ch - (d.v / maxV) * ch]);
   const linePath = pts.reduce((acc, [x, y], i) => {
