@@ -2284,8 +2284,9 @@ function SessionAnalyticsPage({ session, onBack }) {
     return { v: count, label: day.toLocaleDateString("en-US", { month:"short", day:"numeric" }) };
   });
 
-  const maxV = Math.max(...trend.map(d => d.v), 1);
-  const W = 600, H = 110, PAD = { t:10, r:4, b:24, l:4 };
+  const hasData = trend.some(d => d.v > 0);
+  const maxV = Math.max(...trend.map(d => d.v), 4);
+  const W = 600, H = 160, PAD = { t:20, r:8, b:28, l:36 };
   const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
   const pts = trend.map((d, i) => [PAD.l + (i / (trend.length - 1)) * cw, PAD.t + ch - (d.v / maxV) * ch]);
   const linePath = pts.reduce((acc, [x, y], i) => {
@@ -2294,7 +2295,8 @@ function SessionAnalyticsPage({ session, onBack }) {
     return `${acc} C${cpx},${py} ${cpx},${y} ${x},${y}`;
   }, "");
   const areaPath = `${linePath} L${pts[pts.length-1][0]},${PAD.t+ch} L${PAD.l},${PAD.t+ch} Z`;
-  const xLabels = [0, 14, 29].map(i => ({ l: trend[i].label, x: pts[i][0] }));
+  const xLabels = [0, 7, 14, 21, 29].map(i => ({ l: trend[i].label, x: pts[i][0] }));
+  const yTicks  = [0, 0.25, 0.5, 0.75, 1].map(r => ({ v: Math.round(r * maxV), y: PAD.t + ch - r * ch }));
 
   return (
     <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
@@ -2324,20 +2326,48 @@ function SessionAnalyticsPage({ session, onBack }) {
       </div>
 
       {/* Views over time chart */}
-      <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20, marginBottom:20 }}>
-        <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:16 }}>Views over time — last 30 days</div>
-        {loading ? <div style={{ height:110, display:"flex", alignItems:"center", justifyContent:"center", color:C.gray400, fontSize:13 }}>Loading…</div> : (
-          <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block" }}>
+      <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"20px 20px 16px", marginBottom:20 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <div>
+            <div style={{ fontSize:14, fontWeight:700, color:C.gray900 }}>Views over time</div>
+            <div style={{ fontSize:12, color:C.gray400, marginTop:2 }}>Last 30 days</div>
+          </div>
+          <div style={{ fontSize:22, fontWeight:900, color:C.gray900 }}>{loading ? "—" : totalViews}</div>
+        </div>
+        {loading ? (
+          <div style={{ height:160, display:"flex", alignItems:"center", justifyContent:"center", color:C.gray400, fontSize:13 }}>Loading…</div>
+        ) : !hasData ? (
+          <div style={{ height:160, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8 }}>
+            <Icon name="chart-line" size={32} color={C.gray300}/>
+            <div style={{ fontSize:13, color:C.gray400 }}>No views yet for this session</div>
+          </div>
+        ) : (
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
             <defs>
               <linearGradient id="sa-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={C.primary} stopOpacity="0.18"/>
+                <stop offset="0%" stopColor={C.primary} stopOpacity="0.15"/>
                 <stop offset="100%" stopColor={C.primary} stopOpacity="0"/>
               </linearGradient>
             </defs>
+            {/* Grid lines + Y labels */}
+            {yTicks.map((t, i) => (
+              <g key={i}>
+                <line x1={PAD.l} y1={t.y} x2={W - PAD.r} y2={t.y} stroke={C.gray100} strokeWidth="1"/>
+                <text x={PAD.l - 6} y={t.y + 4} textAnchor="end" fontSize="9" fill={C.gray400} fontFamily="Inter,sans-serif">{t.v}</text>
+              </g>
+            ))}
+            {/* Area */}
             <path d={areaPath} fill="url(#sa-grad)"/>
+            {/* Line */}
             <path d={linePath} fill="none" stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="3" fill={C.white} stroke={C.primary} strokeWidth="2"/>)}
-            {xLabels.map((l, i) => <text key={i} x={l.x} y={H - 4} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{l.l}</text>)}
+            {/* Dots only on non-zero points */}
+            {pts.map(([x, y], i) => trend[i].v > 0 && (
+              <circle key={i} cx={x} cy={y} r="4" fill={C.white} stroke={C.primary} strokeWidth="2.5"/>
+            ))}
+            {/* X labels */}
+            {xLabels.map((l, i) => (
+              <text key={i} x={l.x} y={H - 4} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Inter,sans-serif">{l.l}</text>
+            ))}
           </svg>
         )}
       </div>
