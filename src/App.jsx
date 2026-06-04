@@ -2081,8 +2081,8 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
                 <div style={{ fontSize:13, color:C.gray400 }}>No views yet in this period</div>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={180}>
-                <AreaChart data={chartData} margin={{ top:8, right:8, left:-20, bottom:0 }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={chartData} margin={{ top:16, right:8, left:-20, bottom:8 }}>
                   <defs>
                     <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor={C.primary} stopOpacity={0.18}/>
@@ -2267,8 +2267,8 @@ function SessionAnalyticsPage({ session, onBack }) {
             <div style={{ fontSize:13, color:C.gray400 }}>No views yet for this session</div>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={chartData} margin={{ top:8, right:8, left:-20, bottom:0 }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={chartData} margin={{ top:16, right:8, left:-20, bottom:8 }}>
               <defs>
                 <linearGradient id="sa-grad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor={C.primary} stopOpacity={0.18}/>
