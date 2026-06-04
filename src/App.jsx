@@ -2063,7 +2063,7 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
         const lineData = trend;
         const hasData  = lineData.some(d => d.v > 0);
         const maxL = Math.max(...lineData.map(d => d.v), 4);
-        const W = 660, H = 160, PAD = { t:16, r:20, b:28, l:36 };
+        const W = 660, H = 160, PAD = { t:16, r:20, b:28, l:44 };
         const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
         const xOf = i => PAD.l + (i / (lineData.length - 1)) * cw;
         const yOf = v => PAD.t + ch - (v / maxL) * ch;
@@ -2100,7 +2100,7 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
                 <div style={{ fontSize:13, color:C.gray400 }}>No views yet in this period</div>
               </div>
             ) : (
-              <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
+              <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible", marginLeft:-8 }}>
                 <defs>
                   <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={C.primary} stopOpacity="0.15"/>
