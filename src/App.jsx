@@ -1913,58 +1913,58 @@ function MiniBarChart48({ data }) {
 function AnalyticsPage({ onEditSession, sessions = [] }) {
   const [range,     setRange]     = useState("28d");
   const [showRange, setShowRange] = useState(false);
+  const [views,     setViews]     = useState([]);
+  const [loading,   setLoading]   = useState(true);
 
   const RANGES = [
-    { key:"7d",  label:"Last 7 days",  dates:"Mar 17 – Mar 23, 2026" },
-    { key:"28d", label:"Last 28 days", dates:"Feb 23 – Mar 22, 2026" },
-    { key:"90d", label:"Last 90 days", dates:"Dec 22 – Mar 22, 2026" },
+    { key:"7d",  label:"Last 7 days"  },
+    { key:"28d", label:"Last 28 days" },
+    { key:"90d", label:"Last 90 days" },
   ];
   const activeRange = RANGES.find(r => r.key === range);
 
-  const TREND = {
-    "7d": [
-      {v:245,label:"Mon"},{v:312,label:"Tue"},{v:198,label:"Wed"},
-      {v:400,label:"Thu"},{v:350,label:"Fri"},{v:190,label:"Sat"},{v:280,label:"Sun"},
-    ],
-    "28d": [
-      {v:82,label:"Feb 23"},{v:95,label:"Feb 24"},{v:140,label:"Feb 25"},{v:110,label:"Feb 26"},
-      {v:88,label:"Feb 27"},{v:75,label:"Feb 28"},{v:200,label:"Mar 1"},{v:180,label:"Mar 2"},
-      {v:145,label:"Mar 3"},{v:220,label:"Mar 4"},{v:195,label:"Mar 5"},{v:160,label:"Mar 6"},
-      {v:180,label:"Mar 7"},{v:210,label:"Mar 8"},{v:175,label:"Mar 9"},{v:140,label:"Mar 10"},
-      {v:310,label:"Mar 11"},{v:280,label:"Mar 12"},{v:240,label:"Mar 13"},{v:190,label:"Mar 14"},
-      {v:350,label:"Mar 15"},{v:320,label:"Mar 16"},{v:280,label:"Mar 17"},{v:240,label:"Mar 18"},
-      {v:190,label:"Mar 19"},{v:220,label:"Mar 20"},{v:260,label:"Mar 21"},{v:310,label:"Mar 22"},
-    ],
-    "90d": [
-      {v:180,label:"Dec 22"},{v:210,label:"Dec 29"},{v:240,label:"Jan 5"},
-      {v:280,label:"Jan 12"},{v:260,label:"Jan 19"},{v:300,label:"Jan 26"},
-      {v:320,label:"Feb 2"},{v:350,label:"Feb 9"},{v:380,label:"Feb 16"},
-      {v:360,label:"Feb 23"},{v:400,label:"Mar 1"},{v:420,label:"Mar 15"},{v:310,label:"Mar 22"},
-    ],
-  };
+  useEffect(() => {
+    setLoading(true);
+    const days = range === "7d" ? 7 : range === "28d" ? 28 : 90;
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    supabase.from("video_views").select("*").gte("created_at", since).then(({ data }) => {
+      setViews(data || []);
+      setLoading(false);
+    });
+  }, [range]);
 
-  const STATS = {
-    "7d":  { views:4821,  watch:382,  completion:64, enrolled:12842, viewsDelta:"+12%", watchDelta:"+8%",  compDelta:"+5%"  },
-    "28d": { views:18200, watch:1430, completion:71, enrolled:12842, viewsDelta:"+18%", watchDelta:"+14%", compDelta:"+9%"  },
-    "90d": { views:54000, watch:4200, completion:76, enrolled:12842, viewsDelta:"+28%", watchDelta:"+22%", compDelta:"+15%" },
-  };
-  const stat  = STATS[range];
-  const trend = TREND[range];
+  const totalViews    = views.length;
+  const watchHrs      = Math.round(views.reduce((s, r) => s + (r.watched_seconds || 0), 0) / 3600);
+  const completions   = views.filter(r => r.completed).length;
+  const completionPct = totalViews > 0 ? Math.round((completions / totalViews) * 100) : 0;
 
-  const TOP_SESSIONS = sessions.slice(0, 4).map((s, i) => ({
-    ...s,
-    avgDuration: ["18:24","14:52","22:10","8:45"][i],
-    avgPct:      ["78%","45%","91%","24%"][i],
-    views:       [850,410,320,240][i],
-  }));
+  // Build daily trend data
+  const days = range === "7d" ? 7 : range === "28d" ? 28 : 90;
+  const buckets = range === "90d" ? 13 : days;
+  const bucketSize = Math.ceil(days / buckets);
+  const trend = Array.from({ length: buckets }, (_, i) => {
+    const bucketStart = new Date(Date.now() - (days - i * bucketSize) * 86400000);
+    const bucketEnd   = new Date(Date.now() - (days - (i + 1) * bucketSize) * 86400000);
+    const count = views.filter(r => {
+      const d = new Date(r.created_at);
+      return d >= bucketStart && d < bucketEnd;
+    }).length;
+    const label = bucketStart.toLocaleDateString("en-US", { month:"short", day:"numeric" });
+    return { v: count, label };
+  });
 
-  const INSIGHTS = [
-    { icon:"trend-up",        title:"User activity up this week"                     },
-    { icon:"timer",           title:"Watch time drops on weekends"                   },
-    { icon:"check-circle",    title:`Completion at all-time high: ${stat.completion}%` },
-    { icon:"star",            title:"\"AI in SPED\" needs a push"                   },
-    { icon:"certificate",     title:"Certificate downloads up 18% vs last month"    },
-  ];
+  // Per-session stats
+  const sessionStats = sessions.map(s => {
+    const sv = views.filter(r => r.session_id === s.id);
+    const avgWatched = sv.length > 0 ? sv.reduce((a, r) => a + (r.watched_seconds || 0), 0) / sv.length : 0;
+    const avgTotal   = sv.length > 0 ? sv.reduce((a, r) => a + (r.total_seconds || 0), 0) / sv.length : 0;
+    const avgPct     = avgTotal > 0 ? Math.round((avgWatched / avgTotal) * 100) : 0;
+    const mins = Math.floor(avgWatched / 60);
+    const secs = Math.round(avgWatched % 60);
+    return { ...s, views: sv.length, avgDuration: `${mins}:${String(secs).padStart(2,"0")}`, avgPct: `${avgPct}%` };
+  }).sort((a, b) => b.views - a.views).slice(0, 4);
+
+  const stat = { views: totalViews, watch: watchHrs, completion: completionPct };
 
   return (
     <div className="aa-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
@@ -2008,10 +2008,10 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
       {/* Metric cards */}
       <div className="aa-metrics">
         {[
-          { label:"Total Views",      val:stat.views.toLocaleString()    },
-          { label:"Watch Time (hrs)", val:stat.watch.toLocaleString()    },
-          { label:"Completion Rate",  val:`${stat.completion}%`          },
-          { label:"Enrolled",         val:stat.enrolled.toLocaleString() },
+          { label:"Total Views",      val: loading ? "—" : stat.views.toLocaleString()      },
+          { label:"Watch Time (hrs)", val: loading ? "—" : stat.watch.toLocaleString()      },
+          { label:"Completion Rate",  val: loading ? "—" : `${stat.completion}%`            },
+          { label:"Total Sessions",   val: loading ? "—" : sessions.length.toLocaleString() },
         ].map(m => (
           <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px" }}>
             <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{m.val}</div>
@@ -2041,12 +2041,8 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
         }
       `}</style>
       {(() => {
-        const barData = range === "7d"
-          ? [{v:245,l:"M"},{v:312,l:"T"},{v:198,l:"W"},{v:400,l:"T"},{v:350,l:"F"},{v:190,l:"S"},{v:280,l:"S"}]
-          : range === "28d"
-          ? [{v:82,l:"W1"},{v:140,l:"W2"},{v:195,l:"W3"},{v:280,l:"W4"}]
-          : [{v:180,l:"Dec"},{v:260,l:"Jan"},{v:350,l:"Feb"},{v:420,l:"Mar"}];
-        const lineData = TREND[range];
+        const lineData = trend;
+        const barData  = trend.map(d => ({ v: d.v, l: d.label.split(" ")[0] }));
         const maxV = Math.max(...barData.map(d => d.v));
         const maxL = Math.max(...lineData.map(d => d.v));
         const minL = Math.min(...lineData.map(d => d.v));
@@ -2083,19 +2079,15 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
               <div>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:2 }}>Views over time</div>
-                <div style={{ fontSize:11, color:C.gray400 }}>{activeRange.dates}</div>
+                <div style={{ fontSize:11, color:C.gray400 }}>{activeRange.label}</div>
               </div>
             </div>
 
             {/* ── DESKTOP: line/area chart ── */}
             <div className="aa-chart-desktop">
               <div className="aa-chart-stat" style={{ borderColor:C.gray100 }}>
-                <div style={{ fontSize:36, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{stat.views.toLocaleString()}</div>
+                <div style={{ fontSize:36, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{loading ? "—" : stat.views.toLocaleString()}</div>
                 <div style={{ fontSize:12, color:C.gray500, marginTop:4, fontWeight:500 }}>total views</div>
-                <div style={{ display:"inline-flex", alignItems:"center", gap:4, marginTop:10, background:"rgba(16,185,129,0.10)", borderRadius:6, padding:"3px 8px" }}>
-                  <Icon name="trend-up" size={11} color="#10b981"/>
-                  <span style={{ fontSize:12, fontWeight:700, color:"#10b981" }}>{stat.viewsDelta}</span>
-                </div>
               </div>
               <div className="aa-chart-line">
                 <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
@@ -2132,12 +2124,8 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
             <div className="aa-chart-mobile">
               <div className="aa-chart-stat-m" style={{ borderColor:C.gray100 }}>
                 <div>
-                  <div style={{ fontSize:30, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{stat.views.toLocaleString()}</div>
+                  <div style={{ fontSize:30, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{loading ? "—" : stat.views.toLocaleString()}</div>
                   <div style={{ fontSize:12, color:C.gray500, marginTop:3, fontWeight:500 }}>total views</div>
-                </div>
-                <div style={{ display:"inline-flex", alignItems:"center", gap:4, background:"rgba(16,185,129,0.10)", borderRadius:6, padding:"4px 10px" }}>
-                  <Icon name="trend-up" size={11} color="#10b981"/>
-                  <span style={{ fontSize:12, fontWeight:700, color:"#10b981" }}>{stat.viewsDelta}</span>
                 </div>
               </div>
               <div key={range} style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:6, height:100 }}>
@@ -2171,13 +2159,13 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
             <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Duration</span>
             <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Views</span>
           </div>
-          {TOP_SESSIONS.map((s,i) => {
+          {sessionStats.map((s,i) => {
             const grads = ["linear-gradient(135deg,#1e3a5f,#3699ff)","linear-gradient(135deg,#4c1d95,#a855f7)","linear-gradient(135deg,#166534,#50cd89)","linear-gradient(135deg,#7c2d12,#f97316)"];
             return (
               <div key={i}
                 onClick={() => onEditSession?.(s)}
                 style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px", gap:"0 10px",
-                  padding:"10px 0", borderBottom:i<TOP_SESSIONS.length-1?`1px solid ${C.gray100}`:"none",
+                  padding:"10px 0", borderBottom:i<sessionStats.length-1?`1px solid ${C.gray100}`:"none",
                   alignItems:"center", cursor:"pointer", borderRadius:8 }}
                 onMouseEnter={e=>e.currentTarget.style.background=C.gray50}
                 onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
@@ -2201,16 +2189,32 @@ function AnalyticsPage({ onEditSession, sessions = [] }) {
         {/* Smart Insights */}
         <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
           <h2 style={{ margin:"0 0 20px", fontSize:16, fontWeight:700, color:C.gray900, lineHeight:1.5 }}>Smart Insights</h2>
-          {INSIGHTS.map((ins,i) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0",
-              borderBottom:i<INSIGHTS.length-1?`1px solid ${C.gray100}`:"none" }}>
-              <div style={{ width:30, height:30, borderRadius:8, background:C.primaryLight,
-                display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <Icon name={ins.icon} size={14} color={C.primary}/>
+          {loading ? (
+            <div style={{ fontSize:14, color:C.gray400 }}>Loading insights…</div>
+          ) : (() => {
+            const insights = [];
+            if (totalViews === 0) {
+              insights.push({ icon:"info", title:"No views yet — share your sessions to get started." });
+            } else {
+              insights.push({ icon:"trend-up", title:`${totalViews} view${totalViews!==1?"s":""} in the ${activeRange.label.toLowerCase()}.` });
+            }
+            if (completionPct >= 70) insights.push({ icon:"check-circle", title:`Strong completion rate: ${completionPct}% of viewers finish sessions.` });
+            else if (completionPct > 0) insights.push({ icon:"warning", title:`Completion rate is ${completionPct}% — consider shorter sessions.` });
+            if (watchHrs > 0) insights.push({ icon:"timer", title:`${watchHrs} hour${watchHrs!==1?"s":""} of total watch time recorded.` });
+            const topS = sessionStats[0];
+            if (topS && topS.views > 0) insights.push({ icon:"star", title:`Most watched: "${topS.title}" with ${topS.views} view${topS.views!==1?"s":""}. ` });
+            if (sessions.length > 0) insights.push({ icon:"play-circle", title:`${sessions.length} session${sessions.length!==1?"s":""} published on the platform.` });
+            return insights.map((ins,i) => (
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0",
+                borderBottom:i<insights.length-1?`1px solid ${C.gray100}`:"none" }}>
+                <div style={{ width:30, height:30, borderRadius:8, background:C.primaryLight,
+                  display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <Icon name={ins.icon} size={14} color={C.primary}/>
+                </div>
+                <div style={{ fontSize:14, fontWeight:600, color:C.gray900, lineHeight:1.4 }}>{ins.title}</div>
               </div>
-              <div style={{ fontSize:14, fontWeight:600, color:C.gray900, lineHeight:1.4 }}>{ins.title}</div>
-            </div>
-          ))}
+            ));
+          })()}
         </div>
       </div>
     </div>
