@@ -291,9 +291,9 @@ function extractVimeoHash(url) {
   return match ? match[1] : null;
 }
 
-function AdminThumb({ idx = 0 }) {
+function AdminThumb({ idx = 0, instructorImage }) {
   const photo = THUMB_PHOTOS[idx % THUMB_PHOTOS.length];
-  const src = `https://images.unsplash.com/${photo}?w=144&h=104&fit=crop&auto=format`;
+  const src = instructorImage || `https://images.unsplash.com/${photo}?w=144&h=104&fit=crop&auto=format`;
   return (
     <div style={{ width:72, height:52, borderRadius:8, overflow:"hidden", flexShrink:0, background:"#e5e7eb" }}>
       <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
@@ -1511,7 +1511,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
             const sc = ADMIN_STATUS_COLORS[s.status] || ADMIN_STATUS_COLORS.DRAFT;
             return (
               <div key={s.id} className="ao-sess-row" style={{ borderBottom:i<arr.length-1?`1px solid ${C.gray100}`:"none" }}>
-                <AdminThumb idx={i}/>
+                <AdminThumb idx={i} instructorImage={s.instructorImage}/>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontWeight:600, fontSize:14, color:C.gray900, overflow:"hidden", textOverflow:"ellipsis", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", whiteSpace:"normal" }}>{s.title}</div>
                   <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:3 }}>
@@ -1668,7 +1668,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
               <div className="asp-card-desktop" style={{ alignItems:"center", gap:20, padding:"20px 24px" }}
                 onMouseEnter={e=>e.currentTarget.style.background=C.gray50}
                 onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                <AdminThumb idx={i}/>
+                <AdminThumb idx={i} instructorImage={s.instructorImage}/>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
                     <Badge label={s.status} color={sc.c} bg={sc.bg} size={11}/>
@@ -1723,7 +1723,7 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
               <div className="asp-card-mobile" style={{ alignItems:"center", gap:12, padding:"12px 14px" }}>
                 {/* Thumbnail */}
                 <div style={{ width:80, height:80, borderRadius:10, overflow:"hidden", flexShrink:0, background:C.gray200 }}>
-                  <img src={`https://images.unsplash.com/${THUMB_PHOTOS[i % THUMB_PHOTOS.length]}?w=160&h=160&fit=crop&auto=format`} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
+                  <img src={s.instructorImage || `https://images.unsplash.com/${THUMB_PHOTOS[i % THUMB_PHOTOS.length]}?w=160&h=160&fit=crop&auto=format`} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
                 </div>
                 {/* Content */}
                 <div style={{ flex:1, minWidth:0 }}>
@@ -3008,7 +3008,10 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                   onFile={async file => {
                     const path = `instructors/${Date.now()}-${file.name}`;
                     const { error } = await supabase.storage.from("session-resources").upload(path, file);
-                    if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("instructorImage", data.publicUrl); }
+                    if (error) { toast({ type:"error", title:"Photo upload failed", message: error.message }); return; }
+                    const { data } = supabase.storage.from("session-resources").getPublicUrl(path);
+                    upd("instructorImage", data.publicUrl);
+                    toast({ type:"success", title:"Photo uploaded", message:"Instructor photo ready. Save the session to apply it." });
                   }} circle height={96}/>
                 <div style={{ marginTop:16 }}>
                 <Label>INSTRUCTOR NAME<span style={{ color:C.error }}> *</span></Label>
@@ -3348,7 +3351,10 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                     onFile={async file => {
                       const path = `instructors/${Date.now()}-${file.name}`;
                       const { error } = await supabase.storage.from("session-resources").upload(path, file);
-                      if (!error) { const { data } = supabase.storage.from("session-resources").getPublicUrl(path); upd("instructorImage", data.publicUrl); }
+                      if (error) { toast({ type:"error", title:"Photo upload failed", message: error.message }); return; }
+                      const { data } = supabase.storage.from("session-resources").getPublicUrl(path);
+                      upd("instructorImage", data.publicUrl);
+                      toast({ type:"success", title:"Photo uploaded", message:"Instructor photo ready. Save the session to apply it." });
                     }} aspect="1/1" height={120}/>
                   <div style={{ marginTop:16 }}>
                   <Label>INSTRUCTOR NAME<span style={{ color:C.error }}> *</span></Label>
@@ -3922,7 +3928,7 @@ export default function App() {
         const dateLabel = s.available_from
           ? new Date(s.available_from).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
           : "";
-        return { id: s.id, title: s.title, category: s.category || "SPED", status: statusLabel, date: dateLabel, enrolled: 0, availableFrom: s.available_from || "", availableTo: s.available_to || "" };
+        return { id: s.id, title: s.title, category: s.category || "SPED", status: statusLabel, date: dateLabel, enrolled: 0, availableFrom: s.available_from || "", availableTo: s.available_to || "", instructorImage: s.instructor_image || "" };
       }));
 
       setSpring2026Ids(prev => {
