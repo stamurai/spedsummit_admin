@@ -566,8 +566,6 @@ function UploadZone({ accept, label, hint, icon, preview, onFile, aspect="16/9",
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [localPreview, setLocalPreview] = useState(preview || null);
-  const dark = document.querySelector("[data-theme='dark']") !== null;
-
   useEffect(() => { if (preview) setLocalPreview(preview); }, [preview]);
 
   function handleFile(file) {
@@ -589,7 +587,7 @@ function UploadZone({ accept, label, hint, icon, preview, onFile, aspect="16/9",
       onDragOver={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-      style={{ ...containerStyle, border:`2px dashed ${dragging ? C.primary : localPreview ? "transparent" : dark ? "rgba(255,255,255,0.15)" : C.gray300}`, borderRadius, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", background:dragging ? C.primaryLight : localPreview ? "transparent" : dark ? "rgba(255,255,255,0.04)" : "#fafafa", transition:"all .2s", position:"relative", overflow:"hidden" }}>
+      style={{ ...containerStyle, border:`2px dashed ${dragging ? C.primary : localPreview ? "transparent" : C.gray300}`, borderRadius, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", background:dragging ? C.primaryLight : localPreview ? "transparent" : "#fafafa", transition:"all .2s", position:"relative", overflow:"hidden" }}>
       {localPreview ? (
         <>
           <img src={localPreview} alt="preview" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}/>
@@ -601,9 +599,9 @@ function UploadZone({ accept, label, hint, icon, preview, onFile, aspect="16/9",
         </>
       ) : (
         <>
-          <Icon name={icon||"cloud-arrow-up"} size={circle ? 24 : 28} color={dragging ? C.primary : dark ? "rgba(255,255,255,0.3)" : C.gray400}/>
-          {!circle && <span style={{ fontSize:13, color: dark ? "rgba(255,255,255,0.6)" : C.gray600, fontWeight:600, marginTop:8 }}>{label||"Click or drag to upload"}</span>}
-          {hint && !circle && <span style={{ fontSize:11, color: dark ? "rgba(255,255,255,0.35)" : C.gray400, marginTop:4 }}>{hint}</span>}
+          <Icon name={icon||"cloud-arrow-up"} size={circle ? 24 : 28} color={dragging ? C.primary : C.gray400}/>
+          {!circle && <span style={{ fontSize:13, color:C.gray600, fontWeight:600, marginTop:8 }}>{label||"Click or drag to upload"}</span>}
+          {hint && !circle && <span style={{ fontSize:11, color:C.gray400, marginTop:4 }}>{hint}</span>}
         </>
       )}
       <input ref={inputRef} type="file" accept={accept||"*/*"} style={{ display:"none" }} onChange={e => handleFile(e.target.files[0])}/>
@@ -1027,7 +1025,7 @@ function SearchBar({ onOpenSession, onNavigate, isAdmin = false, sessions = [] }
     </div>
   );
 }
-function TopBar({ onToggleAdmin, isAdmin, toast, isDark, onToggleDarkMode, onLogout, onNavigateProfile, onOpenSession, onNavigate, userName = "", userAvatar, onBrowseSelect, seasons = SEASONS, sessions = [], onOpenInstructor, onGoHome }) {
+function TopBar({ onToggleAdmin, isAdmin, toast, onLogout, onNavigateProfile, onOpenSession, onNavigate, userName = "", userAvatar, onBrowseSelect, seasons = SEASONS, sessions = [], onOpenInstructor, onGoHome }) {
   const [showNotif, setShowNotif] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showReferModal, setShowReferModal] = useState(false);
@@ -1173,12 +1171,12 @@ function TopBar({ onToggleAdmin, isAdmin, toast, isDark, onToggleDarkMode, onLog
         <div style={{ position: "relative" }} ref={avatarBtnRef}>
           <button
             onClick={() => setShowProfileMenu(v => !v)}
-            style={{ border:`1px solid ${isDark?"rgba(255,255,255,0.15)":C.gray200}`, background: isDark?"rgba(255,255,255,0.06)":"transparent", padding:"4px 10px 4px 4px", cursor: "pointer", borderRadius: 99, display:"flex", alignItems:"center", gap:8, transition:"background .15s" }}
-            onMouseEnter={e=>e.currentTarget.style.background=isDark?"rgba(255,255,255,0.1)":C.gray50}
-            onMouseLeave={e=>e.currentTarget.style.background=isDark?"rgba(255,255,255,0.06)":"transparent"}>
+            style={{ border:`1px solid ${C.gray200}`, background:"transparent", padding:"4px 10px 4px 4px", cursor: "pointer", borderRadius: 99, display:"flex", alignItems:"center", gap:8, transition:"background .15s" }}
+            onMouseEnter={e=>e.currentTarget.style.background=C.gray50}
+            onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
             <Avatar name={userName} src={userAvatar} size={28}/>
-            {userName && <span style={{ fontSize:13, fontWeight:600, color:isDark?"#fff":C.gray800, maxWidth:80, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{userName.split(" ")[0]}</span>}
-            <Icon name="caret-down" size={12} color={isDark?"rgba(255,255,255,0.5)":C.gray500}/>
+            {userName && <span style={{ fontSize:13, fontWeight:600, color:C.gray800, maxWidth:80, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{userName.split(" ")[0]}</span>}
+            <Icon name="caret-down" size={12} color={C.gray500}/>
           </button>
           {showProfileMenu && (
             <DropdownMenu anchorRef={avatarBtnRef}
@@ -1187,11 +1185,6 @@ function TopBar({ onToggleAdmin, isAdmin, toast, isDark, onToggleDarkMode, onLog
                   icon: "user-circle",
                   label: "My Profile",
                   action: () => { setShowProfileMenu(false); onNavigateProfile?.(); },
-                },
-                {
-                  icon: isDark ? "sun" : "moon",
-                  label: isDark ? "Light Mode" : "Dark Mode",
-                  action: () => onToggleDarkMode?.(),
                 },
                 ...(!isAdmin ? [
                   {
@@ -3878,7 +3871,6 @@ export default function App() {
   const [page, setPage] = useState(() => sessionStorage.getItem("page") || "admin-overview");
   const navHistoryRef = useRef(["admin-overview"]);
   const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem("isAdmin") === "1");
-  const [isDark, setIsDark] = useState(() => { const h = new Date().getHours(); return h >= 19 || h < 6; });
   const [editingSession, setEditingSession] = useState(null);
   const [analyticsSession, setAnalyticsSession] = useState(null);
   const { toasts, toast, remove } = useToast();
@@ -4177,13 +4169,11 @@ export default function App() {
   }
 
   return (
-    <div data-theme={isDark ? "dark" : "light"} style={{ height:"100vh", display:"flex", flexDirection:"column", fontFamily:"'Inter', -apple-system, BlinkMacSystemFont, sans-serif", background:C.gray50 }}>
+    <div data-theme="light" style={{ height:"100vh", display:"flex", flexDirection:"column", fontFamily:"'Inter', -apple-system, BlinkMacSystemFont, sans-serif", background:C.gray50 }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
       <TopBar
         isAdmin={true}
         toast={toast}
-        isDark={isDark}
-        onToggleDarkMode={() => setIsDark(v => !v)}
         onLogout={async () => {
           sessionStorage.setItem("loggedOut", "1");
           sessionStorage.removeItem("isAdmin");
@@ -4268,18 +4258,6 @@ export default function App() {
           --fs-body-xl:20px; --fs-body-lg:18px; --fs-body-md:16px;
           --lh-display:1.25; --lh-body:1.5;
         }
-        [data-theme="dark"] {
-          --hero-bg: linear-gradient(120deg, #1a2035, #0f172a);
-          --c-primary:#7aa3ee; --c-primaryDark:#6490E8; --c-primaryLight:#1a2540; --c-primaryBorder:#2d4a7a;
-          --c-accent:#FF8F6C; --c-accentBg:#2a1a14;
-          --c-success:#10b981; --c-successLight:#064e3b; --c-successBorder:#065f46;
-          --c-warning:#f59e0b; --c-warningLight:#451a03; --c-warningBorder:#92400e;
-          --c-error:#ef4444; --c-errorLight:#450a0a; --c-errorBorder:#7f1d1d;
-          --c-info:#7aa3ee; --c-infoLight:#1a2540; --c-infoBorder:#2d4a7a;
-          --c-gray50:#1e293b; --c-gray100:#1e293b; --c-gray200:#2d3748; --c-gray300:#4b5563;
-          --c-gray400:#6b7280; --c-gray500:#9ca3af; --c-gray600:#d1d5db; --c-gray700:#e5e7eb;
-          --c-gray800:#e2e8f0; --c-gray900:#f1f5f9; --c-white:#1e293b;
-        }
         * { box-sizing: border-box; }
         @keyframes toastIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
         @keyframes fadeIn  { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
@@ -4293,9 +4271,7 @@ export default function App() {
         button { font-family: inherit; }
         input[type="datetime-local"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: brightness(0) saturate(100%) opacity(0.45); }
         input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover { filter: brightness(0) saturate(100%) opacity(0.8); }
-        [data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: brightness(0) invert(1) opacity(0.45); }
-        [data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover { filter: brightness(0) invert(1) opacity(0.85); }
-        [data-theme="dark"] #spedLogoSvg { filter: brightness(0) invert(1); }
+
       `}</style>
     </div>
   );
