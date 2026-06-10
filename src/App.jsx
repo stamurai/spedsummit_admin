@@ -2803,7 +2803,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
   const [form, setForm] = useState({
     title:"", category:"SPED", lang:"English", desc:"",
     availableFrom:"", availableTo:"",
-    instructorName:"", bio:"", linkedin:"", instagram:"", facebook:"", website:"", podcast:"",
+    instructorName:"", designation:"", bio:"", linkedin:"", instagram:"", facebook:"", website:"", podcast:"",
     instructorImage:"", thumbnail:"",
     vimeoUrl:"",
     discussion:true, qa:true, spinWheel:false, certificate:false, commentVisibility:"visible",
@@ -3055,8 +3055,10 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <div style={{ marginTop:16 }}>
                 <Label>INSTRUCTOR NAME<span style={{ color:C.error }}> *</span></Label>
                 <input value={form.instructorName} onChange={e=>upd("instructorName",e.target.value)} placeholder="e.g. Jane Doe" style={{...inputSt, marginBottom:16}}/>
+                <Label>DESIGNATION</Label>
+                <input value={form.designation} onChange={e=>upd("designation",e.target.value)} placeholder="e.g. Mental Health Therapist, LPC" style={{...inputSt, marginBottom:16}}/>
                 <Label>PROFESSIONAL BIO</Label>
-                <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={2} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
+                <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={6} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
                 <Label>SOCIAL LINKS</Label>
                 <SocialLinksFields form={form} upd={upd}/>
                 </div>
@@ -3105,6 +3107,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
     availableFrom:  session.availableFrom  || "",
     availableTo:    session.availableTo    || "",
     instructorName:  session.instructor     || "",
+    designation:     session.designation    || "",
     bio:             session.instructorBio  || session.bio || "",
     linkedin:        session.linkedin        || "",
     instagram:       session.instagram      || "",
@@ -3399,8 +3402,10 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                   <div style={{ marginTop:16 }}>
                   <Label>INSTRUCTOR NAME<span style={{ color:C.error }}> *</span></Label>
                   <input value={form.instructorName} onChange={e=>upd("instructorName",e.target.value)} placeholder="e.g. Jane Doe" style={{...inputSt, marginBottom:16}}/>
+                  <Label>DESIGNATION</Label>
+                  <input value={form.designation} onChange={e=>upd("designation",e.target.value)} placeholder="e.g. Mental Health Therapist, LPC" style={{...inputSt, marginBottom:16}}/>
                   <Label>PROFESSIONAL BIO</Label>
-                  <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={2} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
+                  <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={6} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
                   <Label>SOCIAL LINKS</Label>
                   <SocialLinksFields form={form} upd={upd}/>
                   </div>
@@ -3936,6 +3941,7 @@ export default function App() {
       const toSession = s => ({
         id: s.id, title: s.title, category: s.category,
         instructor: s.instructor || "", instructorBio: s.instructor_bio || "",
+        designation: s.designation || "",
         linkedin: s.linkedin || "", instagram: s.instagram || "",
         facebook: s.facebook || "", website: s.website || "", podcast: s.podcast || "",
         instructorImage: s.instructor_image || "", thumbnail: s.thumbnail || "",
@@ -4124,6 +4130,7 @@ export default function App() {
     const supabaseEntry = {
       id: Date.now(), title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
+      designation: form.designation || "",
       linkedin: form.linkedin || "", instagram: form.instagram || "",
       facebook: form.facebook || "", website: form.website || "", podcast: form.podcast || "",
       instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
@@ -4158,6 +4165,7 @@ export default function App() {
     const supabaseUpdate = {
       title: form.title, category: form.category,
       instructor: form.instructorName, instructor_bio: form.bio,
+      designation: form.designation || "",
       linkedin: form.linkedin || "", instagram: form.instagram || "",
       facebook: form.facebook || "", website: form.website || "", podcast: form.podcast || "",
       instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
