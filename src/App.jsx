@@ -1668,7 +1668,10 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
                     <Badge label={s.status} color={sc.c} bg={sc.bg} size={11}/>
-                    <span style={{ fontSize:13, fontWeight:500, color:C.gray500 }}>{s.category}</span>
+                    {s.instructor
+                      ? <span style={{ fontSize:13, fontWeight:500, color:C.gray500 }}>{s.instructor.split("|")[0].trim()}</span>
+                      : <span style={{ fontSize:13, fontWeight:500, color:C.gray500 }}>{s.category}</span>
+                    }
                   </div>
                   <div style={{ fontWeight:700, fontSize:15, color:C.gray900, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:5 }}>{s.title}</div>
                   <div style={{ fontSize:13, color:C.gray500, display:"flex", gap:14, alignItems:"center", flexWrap:"wrap" }}>
