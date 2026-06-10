@@ -2790,7 +2790,7 @@ function InstructorSocialLinks({ session, size = 20 }) {
   return (
     <div style={{ display:"flex", gap:10, marginTop:8, flexWrap:"wrap" }}>
       {links.map(({ key, icon, color }) => (
-        <a key={key} href={session[key]} target="_blank" rel="noopener noreferrer"
+        <a key={key} href={/^https?:\/\//i.test(session[key]) ? session[key] : `https://${session[key]}`} target="_blank" rel="noopener noreferrer"
           style={{ display:"flex", alignItems:"center", justifyContent:"center", width:32, height:32, borderRadius:"50%", background:C.gray100, transition:"background .15s", flexShrink:0 }}
           onMouseEnter={e=>e.currentTarget.style.background=C.gray200}
           onMouseLeave={e=>e.currentTarget.style.background=C.gray100}>
