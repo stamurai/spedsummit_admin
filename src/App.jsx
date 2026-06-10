@@ -2759,11 +2759,11 @@ function AdminProfilePage({ onBack, userName, userEmail, userAvatar }) {
 }
 
 const SOCIAL_FIELDS = [
-  { key:"linkedin",  icon:"linkedin-logo",  placeholder:"LinkedIn URL",  color:"#0077B5" },
-  { key:"instagram", icon:"instagram-logo", placeholder:"Instagram URL", color:"#E1306C" },
-  { key:"facebook",  icon:"facebook-logo",  placeholder:"Facebook URL",  color:"#1877F2" },
-  { key:"website",   icon:"globe",          placeholder:"Website URL",   color:C.gray500 },
-  { key:"podcast",   icon:"microphone",     placeholder:"Podcast URL",   color:"#9333ea" },
+  { key:"linkedin",  icon:"linkedin-logo",  placeholder:"https://linkedin.com/in/username",  color:"#0077B5" },
+  { key:"instagram", icon:"instagram-logo", placeholder:"https://instagram.com/username",     color:"#E1306C" },
+  { key:"facebook",  icon:"facebook-logo",  placeholder:"https://facebook.com/username",      color:"#1877F2" },
+  { key:"website",   icon:"globe",          placeholder:"https://yourwebsite.com",            color:C.gray500 },
+  { key:"podcast",   icon:"microphone",     placeholder:"https://podcast-url.com",            color:"#9333ea" },
 ];
 
 function SocialLinksFields({ form, upd }) {
