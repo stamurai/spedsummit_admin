@@ -115,6 +115,9 @@ const ICON_MAP = {
   "linkedin-logo":      PhosphorIcons.LinkedinLogo,
   "youtube-logo":       PhosphorIcons.YoutubeLogo,
   "instagram-logo":     PhosphorIcons.InstagramLogo,
+  "facebook-logo":      PhosphorIcons.FacebookLogo,
+  globe:                PhosphorIcons.Globe,
+  microphone:           PhosphorIcons.Microphone,
 };
 
 const Icon = ({ name, size = 20, color = "currentColor", style: s = {} }) => {
@@ -2752,12 +2755,55 @@ function AdminProfilePage({ onBack, userName, userEmail, userAvatar }) {
   );
 }
 
+const SOCIAL_FIELDS = [
+  { key:"linkedin",  icon:"linkedin-logo",  placeholder:"LinkedIn URL",  color:"#0077B5" },
+  { key:"instagram", icon:"instagram-logo", placeholder:"Instagram URL", color:"#E1306C" },
+  { key:"facebook",  icon:"facebook-logo",  placeholder:"Facebook URL",  color:"#1877F2" },
+  { key:"website",   icon:"globe",          placeholder:"Website URL",   color:C.gray500 },
+  { key:"podcast",   icon:"microphone",     placeholder:"Podcast URL",   color:"#9333ea" },
+];
+
+function SocialLinksFields({ form, upd }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+      {SOCIAL_FIELDS.map(({ key, icon, placeholder, color }) => (
+        <div key={key} style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <Icon name={icon} size={20} color={color}/>
+          <input
+            value={form[key] || ""}
+            onChange={e => upd(key, e.target.value)}
+            placeholder={placeholder}
+            style={{ ...inputSt, flex:1, marginBottom:0 }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InstructorSocialLinks({ session, size = 20 }) {
+  const links = SOCIAL_FIELDS.filter(f => session[f.key]);
+  if (!links.length) return null;
+  return (
+    <div style={{ display:"flex", gap:10, marginTop:8, flexWrap:"wrap" }}>
+      {links.map(({ key, icon, color }) => (
+        <a key={key} href={session[key]} target="_blank" rel="noopener noreferrer"
+          style={{ display:"flex", alignItems:"center", justifyContent:"center", width:32, height:32, borderRadius:"50%", background:C.gray100, transition:"background .15s", flexShrink:0 }}
+          onMouseEnter={e=>e.currentTarget.style.background=C.gray200}
+          onMouseLeave={e=>e.currentTarget.style.background=C.gray100}>
+          <Icon name={icon} size={size} color={color}/>
+        </a>
+      ))}
+    </div>
+  );
+}
+
 function AdminCreateSession({ onBack, toast, onSave }) {
   const [tab,  setTab]  = useState("details");
   const [form, setForm] = useState({
     title:"", category:"SPED", lang:"English", desc:"",
     availableFrom:"", availableTo:"",
-    instructorName:"", bio:"", linkedin:"", twitter:"",
+    instructorName:"", bio:"", linkedin:"", instagram:"", facebook:"", website:"", podcast:"",
     instructorImage:"", thumbnail:"",
     vimeoUrl:"",
     discussion:true, qa:true, spinWheel:false, certificate:false, commentVisibility:"visible",
@@ -3011,10 +3057,8 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <input value={form.instructorName} onChange={e=>upd("instructorName",e.target.value)} placeholder="e.g. Jane Doe" style={{...inputSt, marginBottom:16}}/>
                 <Label>PROFESSIONAL BIO</Label>
                 <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={2} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
-                <Label>LINKEDIN</Label>
-                <input value={form.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
-                <Label>X (TWITTER)</Label>
-                <input value={form.twitter} onChange={e=>upd("twitter",e.target.value)} placeholder="X handle" style={inputSt}/>
+                <Label>SOCIAL LINKS</Label>
+                <SocialLinksFields form={form} upd={upd}/>
                 </div>
                 </div>
               </div>
@@ -3062,8 +3106,11 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
     availableTo:    session.availableTo    || "",
     instructorName:  session.instructor     || "",
     bio:             session.instructorBio  || session.bio || "",
-    linkedin:        session.linkedin       || "",
-    twitter:         session.twitter        || "",
+    linkedin:        session.linkedin        || "",
+    instagram:       session.instagram      || "",
+    facebook:        session.facebook       || "",
+    website:         session.website        || "",
+    podcast:         session.podcast        || "",
     instructorImage: session.instructorImage || "",
     thumbnail:       session.thumbnail      || "",
     vimeoUrl:        session.vimeoUrl       || "",
@@ -3354,10 +3401,8 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                   <input value={form.instructorName} onChange={e=>upd("instructorName",e.target.value)} placeholder="e.g. Jane Doe" style={{...inputSt, marginBottom:16}}/>
                   <Label>PROFESSIONAL BIO</Label>
                   <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} placeholder="Short bio about your career and achievements…" rows={2} style={{...inputSt,resize:"vertical", marginBottom:16}}/>
-                  <Label>LINKEDIN</Label>
-                  <input value={form.linkedin} onChange={e=>upd("linkedin",e.target.value)} placeholder="LinkedIn username" style={{...inputSt, marginBottom:16}}/>
-                  <Label>X (TWITTER)</Label>
-                  <input value={form.twitter} onChange={e=>upd("twitter",e.target.value)} placeholder="X handle" style={inputSt}/>
+                  <Label>SOCIAL LINKS</Label>
+                  <SocialLinksFields form={form} upd={upd}/>
                   </div>
                 </div>
               </div>
@@ -3891,7 +3936,8 @@ export default function App() {
       const toSession = s => ({
         id: s.id, title: s.title, category: s.category,
         instructor: s.instructor || "", instructorBio: s.instructor_bio || "",
-        linkedin: s.linkedin || "", twitter: s.twitter || "",
+        linkedin: s.linkedin || "", instagram: s.instagram || "",
+        facebook: s.facebook || "", website: s.website || "", podcast: s.podcast || "",
         instructorImage: s.instructor_image || "", thumbnail: s.thumbnail || "",
         duration: s.duration || "60 mins", resources: s.resources || 0,
         progress: 0, status: "not-started",
@@ -4078,7 +4124,8 @@ export default function App() {
     const supabaseEntry = {
       id: Date.now(), title: form.title, category: form.category || "SPED",
       instructor: form.instructorName || "", instructor_bio: form.bio || "",
-      linkedin: form.linkedin || "", twitter: form.twitter || "",
+      linkedin: form.linkedin || "", instagram: form.instagram || "",
+      facebook: form.facebook || "", website: form.website || "", podcast: form.podcast || "",
       instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
       duration: "60 mins",
       description: form.desc || "", vimeo_url: form.vimeoUrl || "",
@@ -4111,7 +4158,8 @@ export default function App() {
     const supabaseUpdate = {
       title: form.title, category: form.category,
       instructor: form.instructorName, instructor_bio: form.bio,
-      linkedin: form.linkedin || "", twitter: form.twitter || "",
+      linkedin: form.linkedin || "", instagram: form.instagram || "",
+      facebook: form.facebook || "", website: form.website || "", podcast: form.podcast || "",
       instructor_image: form.instructorImage || "", thumbnail: form.thumbnail || "",
       description: form.desc, vimeo_url: form.vimeoUrl,
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
@@ -4125,6 +4173,8 @@ export default function App() {
       ...s, title: form.title, category: form.category, instructor: form.instructorName,
       instructorBio: form.bio, description: form.desc, vimeoUrl: form.vimeoUrl,
       instructorImage: form.instructorImage || "",
+      linkedin: form.linkedin || "", instagram: form.instagram || "",
+      facebook: form.facebook || "", website: form.website || "", podcast: form.podcast || "",
       availableFrom: form.availableFrom, availableTo: form.availableTo,
       ...(updatedLessons ? { lessons: updatedLessons } : {}),
     } : s));
