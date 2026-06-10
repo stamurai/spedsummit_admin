@@ -3975,7 +3975,7 @@ export default function App() {
         const dateLabel = s.available_from
           ? new Date(s.available_from).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
           : "";
-        return { id: s.id, title: s.title, category: s.category || "SPED", status: statusLabel, date: dateLabel, enrolled: 0, availableFrom: s.available_from || "", availableTo: s.available_to || "", instructorImage: s.instructor_image || "" };
+        return { id: s.id, title: s.title, category: s.category || "SPED", instructor: s.instructor || "", status: statusLabel, date: dateLabel, enrolled: 0, availableFrom: s.available_from || "", availableTo: s.available_to || "", instructorImage: s.instructor_image || "" };
       }));
 
       setSpring2026Ids(prev => {
