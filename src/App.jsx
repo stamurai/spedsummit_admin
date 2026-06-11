@@ -3137,6 +3137,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
     id: l.id, title: l.title, type: l.type || "video",
     duration: l.duration || "", status: l.status || "draft",
     vimeoUrl: l.vimeoUrl || "", questions: Array.isArray(l.questions) ? l.questions : [], quizExpanded: false,
+    materialUrl: l.materialUrl || l.url || "", materialFileName: l.materialFileName || "",
   }));
   // Ensure there's always a quiz lesson
   const hasQuiz = mappedLessons.some(l => l.type === "quiz");
@@ -4131,6 +4132,8 @@ export default function App() {
           duration: l.duration || "60:00", status: publish ? "available" : "draft",
           type: l.type || "video", vimeoUrl: l.vimeoUrl || form.vimeoUrl || "",
           questions: l.questions || [],
+          ...(l.materialUrl ? { url: l.materialUrl, materialUrl: l.materialUrl } : {}),
+          ...(l.materialFileName ? { materialFileName: l.materialFileName } : {}),
         })))
       : [{ sectionTitle:"Session", title:"Full Session", duration:"60:00", status: publish ? "available" : "draft", type:"video", vimeoUrl: form.vimeoUrl || "" }];
 
@@ -4166,6 +4169,8 @@ export default function App() {
           duration: l.duration || "60:00", status: l.status === "draft" ? "available" : l.status,
           type: l.type || "video", vimeoUrl: l.vimeoUrl || "",
           questions: l.questions || [],
+          ...(l.materialUrl ? { url: l.materialUrl, materialUrl: l.materialUrl } : {}),
+          ...(l.materialFileName ? { materialFileName: l.materialFileName } : {}),
         })))
       : undefined;
 
