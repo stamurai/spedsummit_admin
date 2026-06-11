@@ -2652,14 +2652,19 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
               onDragLeave={()=>patchLesson(l._secId,l.id,{_dropOver:false})}
               onDrop={e=>{ e.preventDefault(); patchLesson(l._secId,l.id,{_dropOver:false}); const f=e.dataTransfer.files?.[0]; if(f) patchLesson(l._secId,l.id,{materialFile:f,title:l.title||f.name.replace(/\.[^.]+$/,"")}); }}
               onClick={()=>{ setUploadingMaterialId({secId:l._secId,lesId:l.id}); setTimeout(()=>materialInputRef.current?.click(),0); }}
-              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, padding:"24px 16px", border:`2px dashed ${l._dropOver?"#059669": l.materialFile?"#bbf7d0":C.gray200}`, borderRadius:10, background: l._dropOver?"#f0fdf4": l.materialFile?"#f0fdf4":C.gray50, cursor:"pointer", transition:"all .15s" }}>
-              <Icon name="cloud-arrow-up" size={26} color={l.materialFile?"#059669":C.gray400}/>
+              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, padding:"24px 16px", border:`2px dashed ${l._dropOver?"#059669": (l.materialFile||l.materialFileName)?"#bbf7d0":C.gray200}`, borderRadius:10, background: l._dropOver?"#f0fdf4": (l.materialFile||l.materialFileName)?"#f0fdf4":C.gray50, cursor:"pointer", transition:"all .15s" }}>
+              <Icon name="cloud-arrow-up" size={26} color={(l.materialFile||l.materialFileName)?"#059669":C.gray400}/>
               {l.materialFile
                 ? <span style={{ fontSize:13, fontWeight:600, color:"#059669" }}>{l.materialFile.name}</span>
-                : <>
-                    <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Click here or drag to add materials</span>
-                    <span style={{ fontSize:12, color:C.gray400 }}>Any document or zip file, max size 10MB</span>
-                  </>
+                : l.materialFileName
+                  ? <>
+                      <span style={{ fontSize:13, fontWeight:600, color:"#059669" }}>{l.materialFileName}</span>
+                      <span style={{ fontSize:11, color:"#059669" }}>Uploaded — click to replace</span>
+                    </>
+                  : <>
+                      <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Click here or drag to add materials</span>
+                      <span style={{ fontSize:12, color:C.gray400 }}>Any document or zip file, max size 10MB</span>
+                    </>
               }
             </div>
           </div>
