@@ -2432,7 +2432,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
   function addLesson(secId, type) {
     const id = Date.now();
     setSections(s => s.map(sec => sec.id!==secId ? sec : {
-      ...sec, lessons:[...sec.lessons, { id, title: type==="quiz"?"New Quiz": type==="material"?"New Material":"New Lesson", type, duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded: type==="quiz" }]
+      ...sec, lessons:[...sec.lessons, { id, title: type==="quiz"?"New Quiz": type==="material"?"New Resource":"New Lesson", type, duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded: type==="quiz" }]
     }));
     setEditingLessonId(id);
   }
@@ -2498,7 +2498,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
   function addFlatLesson(type) {
     if (sections.length === 0) {
       const secId = Date.now();
-      setSections([{ id: secId, title:"Section 1", collapsed:false, resources:[], lessons:[{ id: secId+1, title: type==="quiz"?"New Quiz": type==="material"?"New Material":"New Lesson", type, duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false }] }]);
+      setSections([{ id: secId, title:"Section 1", collapsed:false, resources:[], lessons:[{ id: secId+1, title: type==="quiz"?"New Quiz": type==="material"?"New Resource":"New Lesson", type, duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false }] }]);
     } else {
       addLesson(sections[sections.length-1].id, type);
     }
@@ -2508,7 +2508,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
 
   function addMaterialWithFile(file) {
     const lesId = Date.now();
-    const name  = file ? file.name.replace(/\.[^.]+$/, "") : "New Material";
+    const name  = file ? file.name.replace(/\.[^.]+$/, "") : "New Resource";
     const mat   = { id:lesId, title:name, type:"material", duration:"", status:"draft", vimeoUrl:"", questions:[], quizExpanded:false, materialFile:file||null, materialFileName:name };
     if (sections.length === 0) {
       const secId = lesId + 1;
@@ -2634,7 +2634,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
       {materialLessons.map((l, mi) => (
         <div key={l.id} style={{ marginBottom:16 }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase" }}>Material</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase" }}>Resource</div>
             <button onClick={()=>deleteFlatLesson(l._secId,l.id)}
               style={{ width:28,height:28,borderRadius:7,border:`1px solid ${C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
               <Icon name="trash" size={13} color={C.error}/>
@@ -2646,7 +2646,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
           <input value={l.title} onChange={e=>patchLesson(l._secId,l.id,{title:e.target.value})}
             placeholder="Enter title…"
             style={{...inputSt, marginBottom:16}}/>
-          <Label>MATERIAL</Label>
+          <Label>RESOURCE</Label>
             <div
               onDragOver={e=>{ e.preventDefault(); patchLesson(l._secId,l.id,{_dropOver:true}); }}
               onDragLeave={()=>patchLesson(l._secId,l.id,{_dropOver:false})}
@@ -2662,7 +2662,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
                       <span style={{ fontSize:11, color:"#059669" }}>Uploaded — click to replace</span>
                     </>
                   : <>
-                      <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Click here or drag to add materials</span>
+                      <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Click here or drag to add resources</span>
                       <span style={{ fontSize:12, color:C.gray400 }}>Any document or zip file, max size 10MB</span>
                     </>
               }
@@ -2674,7 +2674,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
       {/* Add material button */}
       <button onClick={()=>addMaterialWithFile(null)}
         style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", border:"none", borderRadius:8, background:C.primary, fontSize:13, fontWeight:600, color:"#fff", cursor:"pointer" }}>
-        <Icon name="plus" size={12} color="#fff"/> Add Material
+        <Icon name="plus" size={12} color="#fff"/> Add Resource
       </button>
     </div>
   );
