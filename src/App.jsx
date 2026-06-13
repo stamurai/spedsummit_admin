@@ -3051,10 +3051,19 @@ function AdminCreateSession({ onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Certificate</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
-                  <Label>CERTIFICATE DESCRIPTION</Label>
-                  <textarea value={form.certDescription} onChange={e=>upd("certDescription",e.target.value)}
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                    <Label style={{ marginBottom:0 }}>CERTIFICATE DESCRIPTION</Label>
+                    <span style={{ fontSize:11, fontWeight:600, color: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length > 80 ? C.error : C.gray400 }}>
+                      {(form.certDescription||"").trim().split(/\s+/).filter(Boolean).length} / 80 words
+                    </span>
+                  </div>
+                  <textarea value={form.certDescription}
+                    onChange={e=>{
+                      const words = e.target.value.trim().split(/\s+/).filter(Boolean);
+                      if (words.length <= 80) upd("certDescription", e.target.value);
+                    }}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
-                    rows={3} style={{...inputSt, resize:"vertical"}}/>
+                    rows={3} style={{...inputSt, resize:"vertical", borderColor: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length >= 80 ? C.warning : undefined}}/>
                 </div>
               </div>
 
@@ -3411,10 +3420,19 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Certificate</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
-                  <Label>CERTIFICATE DESCRIPTION</Label>
-                  <textarea value={form.certDescription} onChange={e=>upd("certDescription",e.target.value)}
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                    <Label style={{ marginBottom:0 }}>CERTIFICATE DESCRIPTION</Label>
+                    <span style={{ fontSize:11, fontWeight:600, color: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length > 80 ? C.error : C.gray400 }}>
+                      {(form.certDescription||"").trim().split(/\s+/).filter(Boolean).length} / 80 words
+                    </span>
+                  </div>
+                  <textarea value={form.certDescription}
+                    onChange={e=>{
+                      const words = e.target.value.trim().split(/\s+/).filter(Boolean);
+                      if (words.length <= 80) upd("certDescription", e.target.value);
+                    }}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
-                    rows={3} style={{...inputSt, resize:"vertical"}}/>
+                    rows={3} style={{...inputSt, resize:"vertical", borderColor: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length >= 80 ? C.warning : undefined}}/>
                 </div>
               </div>
 
