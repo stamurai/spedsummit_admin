@@ -3051,15 +3051,6 @@ function AdminCreateSession({ onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Certificate</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <Icon name="certificate" size={18} color={C.primary}/>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:14, fontWeight:700, color:C.gray900 }}>Professional Development Certificate</div>
-                      <div style={{ fontSize:12, color:C.gray500 }}>Issued on session completion</div>
-                    </div>
-                  </div>
                   <Label>CERTIFICATE DESCRIPTION</Label>
                   <textarea value={form.certDescription} onChange={e=>upd("certDescription",e.target.value)}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
@@ -3420,15 +3411,6 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Certificate</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <Icon name="certificate" size={18} color={C.primary}/>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:14, fontWeight:700, color:C.gray900 }}>Professional Development Certificate</div>
-                      <div style={{ fontSize:12, color:C.gray500 }}>Issued on session completion</div>
-                    </div>
-                  </div>
                   <Label>CERTIFICATE DESCRIPTION</Label>
                   <textarea value={form.certDescription} onChange={e=>upd("certDescription",e.target.value)}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
