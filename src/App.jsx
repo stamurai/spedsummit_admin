@@ -1930,7 +1930,7 @@ function MiniBarChart48({ data }) {
   );
 }
 
-function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] }) {
+function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionReviews, sessions = [] }) {
   const [range,     setRange]     = useState("28d");
   const [showRange, setShowRange] = useState(false);
   const [views,     setViews]     = useState([]);
@@ -2127,34 +2127,43 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, sessions = [] })
         <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
           <h2 style={{ margin:"0 0 14px", fontSize:16, fontWeight:700, color:C.gray900, lineHeight:1.5 }}>Top Sessions</h2>
           {/* Header */}
-          <div style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px", gap:"0 10px",
+          <div style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px 120px", gap:"0 10px",
             padding:"4px 0 8px", borderBottom:`1px solid ${C.gray100}`, marginBottom:2 }}>
             <span style={{ gridColumn:"1 / 4", fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Content</span>
             <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Duration</span>
             <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Views</span>
+            <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Actions</span>
           </div>
           {sessionStats.map((s,i) => {
             const grads = ["linear-gradient(135deg,#1e3a5f,#3699ff)","linear-gradient(135deg,#4c1d95,#a855f7)","linear-gradient(135deg,#166534,#50cd89)","linear-gradient(135deg,#7c2d12,#f97316)"];
             return (
               <div key={i}
-                onClick={() => onOpenSessionAnalytics?.(s)}
-                style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px", gap:"0 10px",
+                style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px 120px", gap:"0 10px",
                   padding:"10px 0", borderBottom:i<sessionStats.length-1?`1px solid ${C.gray100}`:"none",
-                  alignItems:"center", cursor:"pointer", borderRadius:8 }}
-                onMouseEnter={e=>e.currentTarget.style.background=C.gray50}
-                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  alignItems:"center" }}>
                 <span style={{ fontSize:12, color:C.gray400, fontWeight:500 }}>{i+1}</span>
                 {/* Thumbnail */}
-                <div style={{ width:56, height:36, borderRadius:6, background:grads[i], flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ width:56, height:36, borderRadius:6, background:grads[i%grads.length], flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                   <Icon name="play" size={12} color="rgba(255,255,255,0.8)"/>
                 </div>
-                {/* Title — constrained width */}
+                {/* Title */}
                 <div style={{ minWidth:0 }}>
                   <div style={{ fontSize:14, fontWeight:600, color:C.gray900, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:160 }}>{s.title}</div>
                   <div style={{ fontSize:12, color:C.gray500, marginTop:2 }}>{s.avgPct} completed</div>
                 </div>
                 <span style={{ fontSize:14, color:C.gray600 }}>{s.avgDuration}</span>
                 <span style={{ fontSize:14, fontWeight:700, color:C.gray900 }}>{s.views}</span>
+                {/* Actions */}
+                <div style={{ display:"flex", gap:6 }}>
+                  <button onClick={() => onOpenSessionAnalytics?.(s)}
+                    style={{ padding:"4px 8px", borderRadius:6, border:`1px solid ${C.gray200}`, background:C.white, fontSize:11, fontWeight:600, color:C.gray600, cursor:"pointer", whiteSpace:"nowrap" }}>
+                    Analytics
+                  </button>
+                  <button onClick={() => onOpenSessionReviews?.(s)}
+                    style={{ padding:"4px 8px", borderRadius:6, border:`1px solid ${C.gray200}`, background:C.white, fontSize:11, fontWeight:600, color:C.primary, cursor:"pointer", whiteSpace:"nowrap" }}>
+                    Reviews
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -2329,6 +2338,120 @@ function SessionAnalyticsPage({ session, onBack }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SESSION REVIEWS PAGE
+───────────────────────────────────────────────────────────────────────────── */
+function SessionReviewsPage({ session, onBack }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase.from("session_reviews").select("*").eq("session_id", String(session.id)).order("created_at", { ascending: false }).then(({ data }) => {
+      setReviews(data || []);
+      setLoading(false);
+    });
+  }, [session.id]);
+
+  async function handleDelete(id) {
+    await supabase.from("session_reviews").delete().eq("id", id);
+    // Also remove from session_comments so it disappears on user side
+    await supabase.from("session_comments").delete().eq("session_id", String(session.id)).eq("body", reviews.find(r => r.id === id)?.review || "__never__");
+    setReviews(prev => prev.filter(r => r.id !== id));
+    setDeleteId(null);
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) + " · " + d.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
+  }
+
+  return (
+    <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
+      <button onClick={onBack} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", color:C.gray500, fontSize:13, fontWeight:600, fontFamily:"inherit", marginBottom:20, padding:0 }}>
+        <Icon name="arrow-left" size={16} color={C.gray500}/> Back to Analytics
+      </button>
+
+      <div style={{ marginBottom:24 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.8, textTransform:"uppercase", marginBottom:4 }}>{session.category}</div>
+        <h1 style={{ margin:"0 0 4px", fontSize:22, fontWeight:900, color:C.gray900, letterSpacing:-0.3 }}>{session.title}</h1>
+        <div style={{ fontSize:13, color:C.gray500 }}>{session.instructor}</div>
+      </div>
+
+      {/* Stats row */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:14, marginBottom:20, maxWidth:400 }}>
+        <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
+          <div style={{ fontSize:28, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{loading ? "—" : reviews.length}</div>
+          <div style={{ fontSize:13, fontWeight:600, color:C.gray500 }}>Total Reviews</div>
+        </div>
+        <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
+          <div style={{ fontSize:28, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>
+            {loading ? "—" : reviews.length === 0 ? "—" : Math.round(reviews.reduce((s,r) => s + (r.rating||0), 0) / reviews.filter(r=>r.rating>0).length * 10) / 10 || "—"}
+          </div>
+          <div style={{ fontSize:13, fontWeight:600, color:C.gray500 }}>Avg Rating</div>
+        </div>
+      </div>
+
+      {/* Reviews list */}
+      <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:16 }}>
+          All Reviews ({loading ? "…" : reviews.length})
+        </div>
+        {loading ? (
+          <div style={{ color:C.gray400, fontSize:13 }}>Loading…</div>
+        ) : reviews.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"40px 0" }}>
+            <Icon name="chat-circle" size={32} color={C.gray300}/>
+            <div style={{ fontSize:14, color:C.gray400, marginTop:8 }}>No reviews yet</div>
+            <div style={{ fontSize:12, color:C.gray300, marginTop:4 }}>Reviews appear after users mark a session as completed</div>
+          </div>
+        ) : reviews.map((r, i) => (
+          <div key={r.id} style={{ padding:"16px 0", borderBottom: i < reviews.length-1 ? `1px solid ${C.gray100}` : "none" }}>
+            <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
+              {/* Avatar */}
+              <div style={{ width:36, height:36, borderRadius:"50%", background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden" }}>
+                {r.author_avatar
+                  ? <img src={r.author_avatar} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                  : <span style={{ fontSize:14, fontWeight:700, color:C.primary }}>{(r.author_name||"A")[0].toUpperCase()}</span>}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                  <span style={{ fontSize:14, fontWeight:700, color:C.gray900 }}>{r.author_name || "Anonymous"}</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:11, color:C.gray400 }}>{fmtDate(r.created_at)}</span>
+                    <button
+                      onClick={() => setDeleteId(r.id)}
+                      style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"4px 10px", borderRadius:6, border:`1px solid ${C.gray200}`, background:"none", cursor:"pointer", fontSize:12, fontWeight:600, color:C.error }}>
+                      <Icon name="trash" size={12} color={C.error}/> Delete
+                    </button>
+                  </div>
+                </div>
+                <p style={{ margin:0, fontSize:13, color:C.gray700, lineHeight:1.6 }}>{r.review}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Delete confirm modal */}
+      {deleteId && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
+          <div style={{ background:C.white, borderRadius:16, padding:28, maxWidth:380, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }}>
+            <div style={{ fontSize:16, fontWeight:800, color:C.gray900, marginBottom:8 }}>Delete this review?</div>
+            <div style={{ fontSize:13, color:C.gray500, marginBottom:24, lineHeight:1.6 }}>This will permanently remove the review and it will no longer appear on the user site.</div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={() => setDeleteId(null)} style={{ flex:1, padding:"10px 0", borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, fontSize:14, fontWeight:600, cursor:"pointer", color:C.gray700 }}>Cancel</button>
+              <button onClick={() => handleDelete(deleteId)} style={{ flex:1, padding:"10px 0", borderRadius:8, border:"none", background:C.error, fontSize:14, fontWeight:700, cursor:"pointer", color:"#fff" }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4007,6 +4130,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem("isAdmin") === "1");
   const [editingSession, setEditingSession] = useState(null);
   const [analyticsSession, setAnalyticsSession] = useState(null);
+  const [reviewsSession,   setReviewsSession]   = useState(null);
   const { toasts, toast, remove } = useToast();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -4296,7 +4420,8 @@ export default function App() {
     if (page==="admin-create") return <AdminCreateSession onBack={()=>nav("admin-sessions")} toast={toast} onSave={addAdminSession}/>;
     if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
     if (page==="admin-analytics" && analyticsSession) return <SessionAnalyticsPage session={analyticsSession} onBack={() => setAnalyticsSession(null)}/>;
-    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => setAnalyticsSession(s)} sessions={sessions}/>;
+    if (page==="admin-analytics" && reviewsSession)   return <SessionReviewsPage session={reviewsSession} onBack={() => setReviewsSession(null)}/>;
+    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => setAnalyticsSession(s)} onOpenSessionReviews={s => setReviewsSession(s)} sessions={sessions}/>;
     if (page==="admin-profile") return <AdminProfilePage onBack={()=>nav("admin-overview")} userName={userName} userEmail={userEmail} userAvatar={userAvatar}/>;
     return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions}/>;
   }
