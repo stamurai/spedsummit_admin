@@ -2253,9 +2253,11 @@ function SessionAnalyticsPage({ session, onBack }) {
 
   return (
     <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
-      <button onClick={onBack} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", color:C.gray500, fontSize:13, fontWeight:600, fontFamily:"inherit", marginBottom:20, padding:0 }}>
-        <Icon name="arrow-left" size={16} color={C.gray500}/> Back to Analytics
-      </button>
+      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20 }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", color:C.gray400, fontSize:13, fontWeight:500, fontFamily:"inherit", padding:0 }}>Analytics</button>
+        <span style={{ color:C.gray300, fontSize:13 }}>/</span>
+        <span style={{ fontSize:13, fontWeight:600, color:C.gray700, maxWidth:320, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{session.title}</span>
+      </div>
 
       <div style={{ marginBottom:24 }}>
         <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.8, textTransform:"uppercase", marginBottom:4 }}>{session.category}</div>
@@ -2374,9 +2376,13 @@ function SessionReviewsPage({ session, onBack }) {
 
   return (
     <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
-      <button onClick={onBack} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"none", border:"none", cursor:"pointer", color:C.gray500, fontSize:13, fontWeight:600, fontFamily:"inherit", marginBottom:20, padding:0 }}>
-        <Icon name="arrow-left" size={16} color={C.gray500}/> Back to Analytics
-      </button>
+      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20 }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", color:C.gray400, fontSize:13, fontWeight:500, fontFamily:"inherit", padding:0 }}>Analytics</button>
+        <span style={{ color:C.gray300, fontSize:13 }}>/</span>
+        <span style={{ fontSize:13, color:C.gray400, maxWidth:220, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{session.title}</span>
+        <span style={{ color:C.gray300, fontSize:13 }}>/</span>
+        <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Reviews</span>
+      </div>
 
       <div style={{ marginBottom:24 }}>
         <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.8, textTransform:"uppercase", marginBottom:4 }}>{session.category}</div>
