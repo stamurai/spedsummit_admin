@@ -2916,6 +2916,8 @@ function AdminCreateSession({ onBack, toast, onSave }) {
 
   async function save(publish=false) {
     if (!form.title.trim()) { toast({ type:"error", title:"Title required", message:"Please add a session title before saving." }); return; }
+    const certWc = (form.certDescription||"").trim()==="" ? 0 : (form.certDescription||"").trim().split(/\s+/).length;
+    if (certWc > 80) { toast({ type:"error", title:"Certificate description too long", message:`Please reduce to 80 words or fewer (currently ${certWc}).` }); return; }
     if (onSave) {
       const ok = await onSave(form, publish, sectionsRef.current);
       if (ok === false) return;
@@ -3084,19 +3086,17 @@ function AdminCreateSession({ onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Certificate</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
+                  {(()=>{ const wc = (form.certDescription||"").trim()==="" ? 0 : (form.certDescription||"").trim().split(/\s+/).length; const over = wc > 80; return (<>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
                     <Label style={{ marginBottom:0 }}>CERTIFICATE DESCRIPTION</Label>
-                    <span style={{ fontSize:11, fontWeight:600, color: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) > 80 ? C.error : C.gray400 }}>
-                      {((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length)} / 80 words
-                    </span>
+                    <span style={{ fontSize:11, fontWeight:600, color: over ? C.error : C.gray400 }}>{wc} / 80 words</span>
                   </div>
                   <textarea value={form.certDescription}
-                    onChange={e=>{
-                      const words = e.target.value.trim() === "" ? [] : e.target.value.trim().split(/\s+/);
-                      if (words.length <= 80) upd("certDescription", e.target.value);
-                    }}
+                    onChange={e=>upd("certDescription", e.target.value)}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
-                    rows={3} style={{...inputSt, resize:"vertical", borderColor: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) >= 80 ? C.warning : undefined}}/>
+                    rows={3} style={{...inputSt, resize:"vertical", borderColor: over ? C.error : undefined}}/>
+                  {over && <span style={{ fontSize:11, color:C.error, marginTop:4, display:"block" }}>Exceeds 80-word limit — certificate will not save until reduced</span>}
+                  </>); })()}
                 </div>
               </div>
 
@@ -3265,6 +3265,8 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
 
   async function save() {
     if (!form.title.trim()) { toast({ type:"error", title:"Title required", message:"Please add a session title before saving." }); return; }
+    const certWc = (form.certDescription||"").trim()==="" ? 0 : (form.certDescription||"").trim().split(/\s+/).length;
+    if (certWc > 80) { toast({ type:"error", title:"Certificate description too long", message:`Please reduce to 80 words or fewer (currently ${certWc}).` }); return; }
     if (onSave) {
       const ok = await onSave(session.id, form, sectionsRef.current);
       if (ok === false) return;
@@ -3453,19 +3455,17 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
               <div style={{ marginBottom:16 }}>
                 <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:10 }}>Certificate</div>
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
+                  {(()=>{ const wc = (form.certDescription||"").trim()==="" ? 0 : (form.certDescription||"").trim().split(/\s+/).length; const over = wc > 80; return (<>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
                     <Label style={{ marginBottom:0 }}>CERTIFICATE DESCRIPTION</Label>
-                    <span style={{ fontSize:11, fontWeight:600, color: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) > 80 ? C.error : C.gray400 }}>
-                      {((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length)} / 80 words
-                    </span>
+                    <span style={{ fontSize:11, fontWeight:600, color: over ? C.error : C.gray400 }}>{wc} / 80 words</span>
                   </div>
                   <textarea value={form.certDescription}
-                    onChange={e=>{
-                      const words = e.target.value.trim() === "" ? [] : e.target.value.trim().split(/\s+/);
-                      if (words.length <= 80) upd("certDescription", e.target.value);
-                    }}
+                    onChange={e=>upd("certDescription", e.target.value)}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
-                    rows={3} style={{...inputSt, resize:"vertical", borderColor: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) >= 80 ? C.warning : undefined}}/>
+                    rows={3} style={{...inputSt, resize:"vertical", borderColor: over ? C.error : undefined}}/>
+                  {over && <span style={{ fontSize:11, color:C.error, marginTop:4, display:"block" }}>Exceeds 80-word limit — certificate will not save until reduced</span>}
+                  </>); })()}
                 </div>
               </div>
 
