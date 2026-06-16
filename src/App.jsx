@@ -1454,6 +1454,26 @@ function TabBar({ active, onChange, isAdmin, breadcrumbs }) {
 
 function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] }) {
   const [menuOpenId, setMenuOpenId] = useState(null);
+  const [metrics, setMetrics] = useState({ enrollments:null, videoViews:null, certificates:null, comments:null });
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("user_progress").select("id", { count:"exact", head:true }),
+      supabase.from("video_views").select("id", { count:"exact", head:true }),
+      supabase.from("certificates").select("id", { count:"exact", head:true }),
+      supabase.from("session_comments").select("id", { count:"exact", head:true }),
+    ]).then(([enrollRes, viewsRes, certsRes, commentsRes]) => {
+      setMetrics({
+        enrollments: enrollRes.count ?? 0,
+        videoViews:  viewsRes.count  ?? 0,
+        certificates: certsRes.count ?? 0,
+        comments:    commentsRes.count ?? 0,
+      });
+    });
+  }, []);
+
+  const fmt = n => n === null ? "—" : n.toLocaleString();
+
   return (
     <div className="ao-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
@@ -1480,10 +1500,10 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
       {/* Metrics */}
       <div className="ao-metrics">
         {[
-          {label:"Course Enrollments", val:"12,842", delta:"+15% vs prev"},
-          {label:"Student Rating",     val:"8.4/10", delta:"Top 1%"     },
-          {label:"Total Site Visits",  val:"83",     delta:"+23 today"  },
-          {label:"Total Revenue",      val:"$4,210", delta:"+8% vs prev"},
+          { label:"Course Enrollments",  val: fmt(metrics.enrollments),  delta:"from user_progress"  },
+          { label:"Video Views",         val: fmt(metrics.videoViews),   delta:"from video_views"    },
+          { label:"Certificates Issued", val: fmt(metrics.certificates), delta:"from certificates"   },
+          { label:"Total Comments",      val: fmt(metrics.comments),     delta:"from session_comments"},
         ].map(m=>(
           <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px" }}>
             <span style={{ display:"inline-block", fontSize:11, fontWeight:700, color:C.gray500, background:C.gray200, padding:"2px 6px", borderRadius:6, marginBottom:6 }}>{m.delta}</span>
