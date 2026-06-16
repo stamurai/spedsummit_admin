@@ -2672,21 +2672,34 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
               onDragLeave={()=>patchLesson(l._secId,l.id,{_dropOver:false})}
               onDrop={e=>{ e.preventDefault(); patchLesson(l._secId,l.id,{_dropOver:false}); const f=e.dataTransfer.files?.[0]; if(f) patchLesson(l._secId,l.id,{materialFile:f,title:l.title||f.name.replace(/\.[^.]+$/,"")}); }}
               onClick={()=>{ setUploadingMaterialId({secId:l._secId,lesId:l.id}); setTimeout(()=>materialInputRef.current?.click(),0); }}
-              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, padding:"24px 16px", border:`2px dashed ${l._dropOver?"#059669": (l.materialFile||l.materialFileName)?"#bbf7d0":C.gray200}`, borderRadius:10, background: l._dropOver?"#f0fdf4": (l.materialFile||l.materialFileName)?"#f0fdf4":C.gray50, cursor:"pointer", transition:"all .15s" }}>
-              <Icon name="cloud-arrow-up" size={26} color={(l.materialFile||l.materialFileName)?"#059669":C.gray400}/>
-              {l.materialFile
-                ? <span style={{ fontSize:13, fontWeight:600, color:"#059669" }}>{l.materialFile.name}</span>
-                : l.materialFileName
-                  ? <>
-                      <span style={{ fontSize:13, fontWeight:600, color:"#059669" }}>{l.materialFileName}</span>
-                      <span style={{ fontSize:11, color:"#059669" }}>Uploaded — click to replace</span>
-                    </>
-                  : <>
-                      <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Click here or drag to add resources</span>
-                      <span style={{ fontSize:12, color:C.gray400 }}>JPEG, PNG, PDF or ZIP — max 10MB</span>
-                    </>
-              }
+              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, padding:"24px 16px", border:`2px dashed ${l._dropOver?"#059669":C.gray200}`, borderRadius:10, background: l._dropOver?"#f0fdf4":C.gray50, cursor:"pointer", transition:"all .15s" }}>
+              <Icon name="cloud-arrow-up" size={26} color={C.gray400}/>
+              <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Click or drag to upload a resource</span>
+              <span style={{ fontSize:11, color:C.gray400 }}>Max 10MB per file</span>
+              <div style={{ display:"flex", gap:6, marginTop:2 }}>
+                {["JPEG","PNG","PDF","ZIP"].map(t=>(
+                  <span key={t} style={{ fontSize:10, fontWeight:600, color:C.gray500, background:C.gray100, border:`1px solid ${C.gray200}`, borderRadius:4, padding:"2px 6px", letterSpacing:.4 }}>{t}</span>
+                ))}
+              </div>
             </div>
+            {(l.materialFile || l.materialFileName) && (
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:8, padding:"10px 12px", background:"#f0fdf4", border:"1px solid #bbf7d0", borderRadius:8 }}>
+                <div style={{ width:32, height:32, borderRadius:6, background:"#dcfce7", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <Icon name="file" size={16} color="#059669"/>
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:600, color:"#059669", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                    {l.materialFile ? l.materialFile.name : l.materialFileName}
+                  </div>
+                  <div style={{ fontSize:11, color:"#16a34a" }}>Uploaded successfully</div>
+                </div>
+                <button
+                  onClick={e=>{ e.stopPropagation(); setUploadingMaterialId({secId:l._secId,lesId:l.id}); setTimeout(()=>materialInputRef.current?.click(),0); }}
+                  style={{ fontSize:11, fontWeight:600, color:"#059669", background:"none", border:"1px solid #86efac", borderRadius:6, padding:"4px 10px", cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
+                  Replace
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}
@@ -3073,17 +3086,17 @@ function AdminCreateSession({ onBack, toast, onSave }) {
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
                     <Label style={{ marginBottom:0 }}>CERTIFICATE DESCRIPTION</Label>
-                    <span style={{ fontSize:11, fontWeight:600, color: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length > 80 ? C.error : C.gray400 }}>
-                      {(form.certDescription||"").trim().split(/\s+/).filter(Boolean).length} / 80 words
+                    <span style={{ fontSize:11, fontWeight:600, color: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) > 80 ? C.error : C.gray400 }}>
+                      {((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length)} / 80 words
                     </span>
                   </div>
                   <textarea value={form.certDescription}
                     onChange={e=>{
-                      const words = e.target.value.trim().split(/\s+/).filter(Boolean);
+                      const words = e.target.value.trim() === "" ? [] : e.target.value.trim().split(/\s+/);
                       if (words.length <= 80) upd("certDescription", e.target.value);
                     }}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
-                    rows={3} style={{...inputSt, resize:"vertical", borderColor: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length >= 80 ? C.warning : undefined}}/>
+                    rows={3} style={{...inputSt, resize:"vertical", borderColor: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) >= 80 ? C.warning : undefined}}/>
                 </div>
               </div>
 
@@ -3442,17 +3455,17 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
                 <div className="aes-card" style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:14, padding:24 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
                     <Label style={{ marginBottom:0 }}>CERTIFICATE DESCRIPTION</Label>
-                    <span style={{ fontSize:11, fontWeight:600, color: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length > 80 ? C.error : C.gray400 }}>
-                      {(form.certDescription||"").trim().split(/\s+/).filter(Boolean).length} / 80 words
+                    <span style={{ fontSize:11, fontWeight:600, color: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) > 80 ? C.error : C.gray400 }}>
+                      {((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length)} / 80 words
                     </span>
                   </div>
                   <textarea value={form.certDescription}
                     onChange={e=>{
-                      const words = e.target.value.trim().split(/\s+/).filter(Boolean);
+                      const words = e.target.value.trim() === "" ? [] : e.target.value.trim().split(/\s+/);
                       if (words.length <= 80) upd("certDescription", e.target.value);
                     }}
                     placeholder="Describe what this certificate represents, e.g. 'Participants who complete this session will receive a Professional Development Certificate for 1.5 CE hours.'"
-                    rows={3} style={{...inputSt, resize:"vertical", borderColor: (form.certDescription||"").trim().split(/\s+/).filter(Boolean).length >= 80 ? C.warning : undefined}}/>
+                    rows={3} style={{...inputSt, resize:"vertical", borderColor: ((form.certDescription||"").trim() === "" ? 0 : (form.certDescription||"").trim().split(/\s+/).length) >= 80 ? C.warning : undefined}}/>
                 </div>
               </div>
 
