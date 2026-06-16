@@ -2127,7 +2127,7 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
         <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
           <h2 style={{ margin:"0 0 14px", fontSize:16, fontWeight:700, color:C.gray900, lineHeight:1.5 }}>Top Sessions</h2>
           {/* Header */}
-          <div style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px 120px", gap:"0 10px",
+          <div style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px 76px", gap:"0 10px",
             padding:"4px 0 8px", borderBottom:`1px solid ${C.gray100}`, marginBottom:2 }}>
             <span style={{ gridColumn:"1 / 4", fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Content</span>
             <span style={{ fontSize:11, color:C.gray400, fontWeight:700, letterSpacing:.8, textTransform:"uppercase" }}>Duration</span>
@@ -2138,7 +2138,7 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
             const grads = ["linear-gradient(135deg,#1e3a5f,#3699ff)","linear-gradient(135deg,#4c1d95,#a855f7)","linear-gradient(135deg,#166534,#50cd89)","linear-gradient(135deg,#7c2d12,#f97316)"];
             return (
               <div key={i}
-                style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px 120px", gap:"0 10px",
+                style={{ display:"grid", gridTemplateColumns:"16px 56px 1fr 72px 44px 76px", gap:"0 10px",
                   padding:"10px 0", borderBottom:i<sessionStats.length-1?`1px solid ${C.gray100}`:"none",
                   alignItems:"center" }}>
                 <span style={{ fontSize:12, color:C.gray400, fontWeight:500 }}>{i+1}</span>
@@ -2155,13 +2155,13 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
                 <span style={{ fontSize:14, fontWeight:700, color:C.gray900 }}>{s.views}</span>
                 {/* Actions */}
                 <div style={{ display:"flex", gap:6 }}>
-                  <button onClick={() => onOpenSessionAnalytics?.(s)}
-                    style={{ padding:"4px 8px", borderRadius:6, border:`1px solid ${C.gray200}`, background:C.white, fontSize:11, fontWeight:600, color:C.gray600, cursor:"pointer", whiteSpace:"nowrap" }}>
-                    Analytics
+                  <button onClick={() => onOpenSessionAnalytics?.(s)} title="Analytics"
+                    style={{ width:32, height:32, borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
+                    <Icon name="chart-line" size={16} color={C.gray600}/>
                   </button>
-                  <button onClick={() => onOpenSessionReviews?.(s)}
-                    style={{ padding:"4px 8px", borderRadius:6, border:`1px solid ${C.gray200}`, background:C.white, fontSize:11, fontWeight:600, color:C.primary, cursor:"pointer", whiteSpace:"nowrap" }}>
-                    Reviews
+                  <button onClick={() => onOpenSessionReviews?.(s)} title="Reviews"
+                    style={{ width:32, height:32, borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
+                    <Icon name="chat-circle" size={16} color={C.primary}/>
                   </button>
                 </div>
               </div>
