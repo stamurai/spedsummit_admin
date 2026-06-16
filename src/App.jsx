@@ -2253,7 +2253,7 @@ function SessionAnalyticsPage({ session, onBack }) {
 
   return (
     <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"10px 16px" }}>
         <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", color:C.gray400, fontSize:13, fontWeight:500, fontFamily:"inherit", padding:0 }}>Analytics</button>
         <span style={{ color:C.gray300, fontSize:13 }}>/</span>
         <span style={{ fontSize:13, fontWeight:600, color:C.gray700, maxWidth:320, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{session.title}</span>
@@ -2376,7 +2376,7 @@ function SessionReviewsPage({ session, onBack }) {
 
   return (
     <div style={{ background:C.gray50, minHeight:"100%", padding:24, fontFamily:"'Inter',-apple-system,sans-serif" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"10px 16px" }}>
         <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", color:C.gray400, fontSize:13, fontWeight:500, fontFamily:"inherit", padding:0 }}>Analytics</button>
         <span style={{ color:C.gray300, fontSize:13 }}>/</span>
         <span style={{ fontSize:13, color:C.gray400, maxWidth:220, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{session.title}</span>
