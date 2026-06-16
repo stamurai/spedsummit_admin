@@ -4491,7 +4491,7 @@ export default function App() {
         `}</style>
 
         <div className="app-tabbar-wrap">
-          {page !== "admin-create" && page !== "admin-edit" && (
+          {page !== "admin-create" && page !== "admin-edit" && !analyticsSession && !reviewsSession && (
             <TabBar
               active={activePage}
               onChange={nav}
@@ -4517,13 +4517,15 @@ export default function App() {
       </div>
 
       {/* Mobile bottom nav */}
-      <div className="app-bottom-nav" style={{ display:"none" }}>
-        <LimelightBottomNav
-          active={activePage}
-          onChange={nav}
-          isAdmin={true}
-        />
-      </div>
+      {!analyticsSession && !reviewsSession && (
+        <div className="app-bottom-nav" style={{ display:"none" }}>
+          <LimelightBottomNav
+            active={activePage}
+            onChange={nav}
+            isAdmin={true}
+          />
+        </div>
+      )}
 
       <ToastContainer toasts={toasts} onRemove={remove}/>
       <style>{`
