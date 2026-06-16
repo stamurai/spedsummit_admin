@@ -2545,8 +2545,8 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
     <div style={{ padding:"0" }}>
       {/* Hidden file inputs */}
       <input ref={resourceInputRef} type="file" accept="application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip" style={{ display:"none" }} onChange={handleResourceChosen}/>
-      <input ref={materialInputRef} type="file" accept="application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.mp3,.mp4" style={{ display:"none" }} onChange={handleMaterialChosen}/>
-      <input ref={materialDropInputRef} type="file" accept="application/pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.mp3,.mp4" style={{ display:"none" }}
+      <input ref={materialInputRef} type="file" accept="image/jpeg,image/png,application/pdf,.zip,application/zip" style={{ display:"none" }} onChange={handleMaterialChosen}/>
+      <input ref={materialDropInputRef} type="file" accept="image/jpeg,image/png,application/pdf,.zip,application/zip" style={{ display:"none" }}
         onChange={e=>{ const f=e.target.files?.[0]; if(f){ e.target.value=""; addMaterialWithFile(f); } }}/>
 
       {/* Lesson / Quiz cards */}
@@ -2683,7 +2683,7 @@ function CurriculumBuilder({ toast, initialSections, onSectionsChange }) {
                     </>
                   : <>
                       <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Click here or drag to add resources</span>
-                      <span style={{ fontSize:12, color:C.gray400 }}>Any document or zip file, max size 10MB</span>
+                      <span style={{ fontSize:12, color:C.gray400 }}>JPEG, PNG, PDF or ZIP — max 10MB</span>
                     </>
               }
             </div>
