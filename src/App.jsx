@@ -4398,7 +4398,7 @@ export default function App() {
       description: form.desc, vimeo_url: form.vimeoUrl,
       available_from: form.availableFrom || null, available_to: form.availableTo || null,
       ...(updatedLessons ? { lessons: updatedLessons } : {}),
-      ...(form.quiz_questions ? { quiz_questions: form.quiz_questions } : {}),
+      quiz_questions: null,
     };
     const { error } = await supabase.from("sessions").update(supabaseUpdate).eq("id", id);
     if (error) { toast({ type:"error", title:"Update failed", message: error.message }); return false; }
