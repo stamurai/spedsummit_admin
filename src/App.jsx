@@ -2260,7 +2260,6 @@ function SessionAnalyticsPage({ session, onBack }) {
       </div>
 
       <div style={{ marginBottom:24 }}>
-        <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.8, textTransform:"uppercase", marginBottom:4 }}>{session.category}</div>
         <h1 style={{ margin:"0 0 4px", fontSize:22, fontWeight:900, color:C.gray900, letterSpacing:-0.3 }}>{session.title}</h1>
         <div style={{ fontSize:13, color:C.gray500 }}>{session.instructor}</div>
       </div>
@@ -2385,7 +2384,6 @@ function SessionReviewsPage({ session, onBack }) {
       </div>
 
       <div style={{ marginBottom:24 }}>
-        <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.8, textTransform:"uppercase", marginBottom:4 }}>{session.category}</div>
         <h1 style={{ margin:"0 0 4px", fontSize:22, fontWeight:900, color:C.gray900, letterSpacing:-0.3 }}>{session.title}</h1>
         <div style={{ fontSize:13, color:C.gray500 }}>{session.instructor}</div>
       </div>
