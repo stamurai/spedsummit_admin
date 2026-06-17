@@ -2968,6 +2968,7 @@ function InstructorSocialLinks({ session, size = 20 }) {
 
 function AdminCreateSession({ onBack, toast, onSave }) {
   const [tab,  setTab]  = useState("details");
+  function switchTab(t) { setTab(t); setTimeout(() => document.querySelector(".app-scroll-area")?.scrollTo(0,0), 0); }
   const [form, setForm] = useState({
     title:"", category:"SPED", lang:"English", desc:"",
     availableFrom:"", availableTo:"",
@@ -3099,7 +3100,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
           </div>
           <div style={{ margin:"0 16px", border:`1px solid ${C.gray200}`, borderRadius:16, overflow:"hidden", background:C.white }}>
             {TABS.map((t, i, arr) => (
-              <button key={t.key} onClick={() => { setTab(t.key); setMobileDrilled(true); }}
+              <button key={t.key} onClick={() => { switchTab(t.key); setMobileDrilled(true); }}
                 style={{ display:"flex", alignItems:"center", gap:16, width:"100%", padding:"14px 18px", background:"none", border:"none", borderBottom: i < arr.length-1 ? `1px solid ${C.gray200}` : "none", cursor:"pointer", textAlign:"left", fontFamily:"inherit" }}>
                 <Icon name={TAB_ICON[t.key]} size={22} color={C.gray700}/>
                 <div style={{ flex:1 }}>
@@ -3131,7 +3132,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
               <Btn variant="outline" onClick={tryBack}>Close</Btn>
               {tab === "availability"
                 ? <Btn onClick={()=>save(true)}>Publish</Btn>
-                : <Btn onClick={() => { setTab(tab==="details"?"curriculum":"availability"); }}>Continue</Btn>
+                : <Btn onClick={() => { switchTab(tab==="details"?"curriculum":"availability"); }}>Continue</Btn>
               }
             </div>
           </div>
@@ -3149,7 +3150,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
             {TABS.map(t => {
               const active = tab === t.key;
               return (
-                <button key={t.key} onClick={()=>setTab(t.key)}
+                <button key={t.key} onClick={()=>switchTab(t.key)}
                   style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, border:"none", background: active ? C.primaryLight : "transparent", color: active ? C.primary : C.gray600, fontSize:14, fontWeight: active ? 700 : 500, cursor:"pointer", textAlign:"left", fontFamily:"inherit", transition:"background .15s" }}>
                   <Icon name={TAB_ICON[t.key]} size={15} color={active ? C.primary : C.gray500}/>
                   {t.label}
@@ -3178,7 +3179,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
             <Btn variant="outline" onClick={tryBack}>Close</Btn>
             {tab === "availability"
               ? <Btn onClick={()=>save(true)}>Publish</Btn>
-              : <Btn onClick={()=>setTab(tab==="details"?"curriculum":"availability")}>Continue</Btn>
+              : <Btn onClick={()=>switchTab(tab==="details"?"curriculum":"availability")}>Continue</Btn>
             }
           </div>
         </div>
@@ -3287,6 +3288,7 @@ function AdminCreateSession({ onBack, toast, onSave }) {
 ───────────────────────────────────────────────────────────────────────────── */
 function AdminEditSession({ session, onBack, toast, onSave }) {
   const [tab,  setTab]  = useState("details");
+  function switchTab(t) { setTab(t); setTimeout(() => document.querySelector(".app-scroll-area")?.scrollTo(0,0), 0); }
   const [mobileDrilled, setMobileDrilled] = useState(false);
   const [form, setForm] = useState({
     title:          session.title          || "",
@@ -3468,7 +3470,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
           </div>
           <div style={{ margin:"0 16px", border:`1px solid ${C.gray200}`, borderRadius:16, overflow:"hidden", background:C.white }}>
             {TABS.map((t, i, arr) => (
-              <button key={t.key} onClick={() => { setTab(t.key); setMobileDrilled(true); }}
+              <button key={t.key} onClick={() => { switchTab(t.key); setMobileDrilled(true); }}
                 style={{ display:"flex", alignItems:"center", gap:16, width:"100%", padding:"14px 18px", background:"none", border:"none", borderBottom: i < arr.length-1 ? `1px solid ${C.gray200}` : "none", cursor:"pointer", textAlign:"left", fontFamily:"inherit" }}>
                 <Icon name={TAB_ICON[t.key]} size={22} color={C.gray700}/>
                 <div style={{ flex:1 }}>
@@ -3500,7 +3502,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
               <Btn variant="outline" onClick={tryBack}>Close</Btn>
               {tab === "availability"
                 ? <Btn onClick={save}>Save Changes</Btn>
-                : <Btn onClick={() => { setTab(tab==="details"?"curriculum":"availability"); }}>Continue</Btn>
+                : <Btn onClick={() => { switchTab(tab==="details"?"curriculum":"availability"); }}>Continue</Btn>
               }
             </div>
           </div>
@@ -3519,7 +3521,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
             {TABS.map(t => {
               const active = tab === t.key;
               return (
-                <button key={t.key} onClick={()=>setTab(t.key)}
+                <button key={t.key} onClick={()=>switchTab(t.key)}
                   style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, border:"none", background: active ? C.primaryLight : "transparent", color: active ? C.primary : C.gray600, fontSize:14, fontWeight: active ? 700 : 500, cursor:"pointer", textAlign:"left", fontFamily:"inherit", transition:"background .15s" }}>
                   <Icon name={TAB_ICON[t.key]} size={15} color={active ? C.primary : C.gray500}/>
                   {t.label}
@@ -3548,7 +3550,7 @@ function AdminEditSession({ session, onBack, toast, onSave }) {
             <Btn variant="outline" onClick={tryBack}>Close</Btn>
             {tab === "availability"
               ? <Btn onClick={save}>Save Changes</Btn>
-              : <Btn onClick={()=>setTab(tab==="details"?"curriculum":"availability")}>Continue</Btn>
+              : <Btn onClick={()=>switchTab(tab==="details"?"curriculum":"availability")}>Continue</Btn>
             }
           </div>
         </div>
