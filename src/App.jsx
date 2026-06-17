@@ -4425,9 +4425,9 @@ export default function App() {
     if (page==="admin-sessions") return <AdminSessionsPage onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions} setAdminSessions={setAdminSessions}/>;
     if (page==="admin-create") return <AdminCreateSession onBack={()=>nav("admin-sessions")} toast={toast} onSave={addAdminSession}/>;
     if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
-    if (page==="admin-analytics" && analyticsSession) return <SessionAnalyticsPage session={analyticsSession} onBack={() => setAnalyticsSession(null)}/>;
-    if (page==="admin-analytics" && reviewsSession)   return <SessionReviewsPage session={reviewsSession} onBack={() => setReviewsSession(null)}/>;
-    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => setAnalyticsSession(s)} onOpenSessionReviews={s => setReviewsSession(s)} sessions={sessions}/>;
+    if (page==="admin-analytics" && analyticsSession) return <SessionAnalyticsPage session={analyticsSession} onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(null); }}/>;
+    if (page==="admin-analytics" && reviewsSession)   return <SessionReviewsPage session={reviewsSession} onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(null); }}/>;
+    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(s); }} onOpenSessionReviews={s => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(s); }} sessions={sessions}/>;
     if (page==="admin-profile") return <AdminProfilePage onBack={()=>nav("admin-overview")} userName={userName} userEmail={userEmail} userAvatar={userAvatar}/>;
     return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions}/>;
   }
