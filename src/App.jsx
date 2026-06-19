@@ -1537,8 +1537,8 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
                 </div>
                 <div style={{ position:"relative" }}>
                   <button onClick={()=>setMenuOpenId(menuOpenId===s.id?null:s.id)} title="More options"
-                    style={{ width:26, height:26, borderRadius:7, border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`, background:C.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <Icon name="dots-three-vertical" size={13} color={C.gray500}/>
+                    style={{ width:28, height:28, borderRadius:7, border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`, background:C.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <Icon name="dots-three-vertical" size={18} color={C.gray700}/>
                   </button>
                   {menuOpenId===s.id && (
                     <>
