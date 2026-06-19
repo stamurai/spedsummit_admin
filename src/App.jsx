@@ -3868,7 +3868,6 @@ function AuthModal({ onClose, onLogin, defaultStep = "user-auth", noOverlay = fa
     setAuthLoading(true);
     setAuthError("");
     try {
-      if (isAdmin && mode === "signup") { setAuthError("Account creation is not allowed from the admin panel."); setAuthLoading(false); return; }
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
@@ -4012,21 +4011,19 @@ function AuthModal({ onClose, onLogin, defaultStep = "user-auth", noOverlay = fa
                   : (mode === "signup" ? "Join thousands of SPED educators today." : "Sign in to access your account.")}
               </p>
 
-              {/* Sign in / Sign up toggle — hidden for admin (sign in only) */}
-              {!isAdmin && (
-                <div style={{ display:"flex", background:"#f1f5f9", borderRadius:8, padding:3, marginBottom:20 }}>
-                  {["signup","signin"].map(m => (
-                    <button key={m} onClick={()=>{ setMode(m); setAuthError(""); }}
-                      style={{ flex:1, padding:"7px 0", borderRadius:6, border:"none", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", transition:"all .15s",
-                        background: mode===m ? "#fff" : "transparent",
-                        color: mode===m ? "#0f172a" : "#94a3b8",
-                        boxShadow: mode===m ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-                      }}>
-                      {m === "signup" ? "Create Account" : "Sign In"}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Sign in / Sign up toggle */}
+              <div style={{ display:"flex", background:"#f1f5f9", borderRadius:8, padding:3, marginBottom:20 }}>
+                {["signup","signin"].map(m => (
+                  <button key={m} onClick={()=>{ setMode(m); setAuthError(""); }}
+                    style={{ flex:1, padding:"7px 0", borderRadius:6, border:"none", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit", transition:"all .15s",
+                      background: mode===m ? "#fff" : "transparent",
+                      color: mode===m ? "#0f172a" : "#94a3b8",
+                      boxShadow: mode===m ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+                    }}>
+                    {m === "signup" ? "Create Account" : "Sign In"}
+                  </button>
+                ))}
+              </div>
 
               {/* Google (user only) */}
               {!isAdmin && (
