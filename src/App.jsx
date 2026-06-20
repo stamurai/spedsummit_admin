@@ -1930,7 +1930,7 @@ function MiniBarChart48({ data }) {
   );
 }
 
-function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionReviews, onOpenComments, sessions = [] }) {
+function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionReviews, onOpenComments, onOpenLiveVisitors, sessions = [] }) {
   const [range,     setRange]     = useState("28d");
   const [showRange, setShowRange] = useState(false);
   const [views,     setViews]     = useState([]);
@@ -2026,6 +2026,11 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
       <div className="aa-header">
         <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:C.gray900, letterSpacing:-0.3, lineHeight:1.25 }}>Analytics</h1>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <button onClick={() => onOpenLiveVisitors?.()}
+            style={{ display:"flex", alignItems:"center", gap:6, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"8px 12px", cursor:"pointer", fontFamily:"inherit" }}>
+            <span style={{ width:7, height:7, borderRadius:"50%", background:C.error, display:"inline-block", animation:"lv-pulse 1.8s ease-in-out infinite" }}/>
+            <span style={{ fontSize:14, fontWeight:600, color:C.gray900 }}>Live</span>
+          </button>
           <button onClick={() => onOpenComments?.()}
             style={{ display:"flex", alignItems:"center", gap:6, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"8px 12px", cursor:"pointer", fontFamily:"inherit" }}>
             <Icon name="chat-dots" size={14} color={C.primary}/>
@@ -2804,6 +2809,523 @@ function AllCommentsPage({ onBack }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LIVE VISITORS PAGE
+───────────────────────────────────────────────────────────────────────────── */
+
+// Country metadata: name/code → { lat, lng, flag }
+const COUNTRY_META = {
+  // Full names
+  "United States":       { lat:38,   lng:-97,   flag:"🇺🇸" },
+  "United Kingdom":      { lat:51.5, lng:-0.1,  flag:"🇬🇧" },
+  "India":               { lat:20,   lng:78,    flag:"🇮🇳" },
+  "Canada":              { lat:56,   lng:-96,   flag:"🇨🇦" },
+  "Australia":           { lat:-25,  lng:134,   flag:"🇦🇺" },
+  "Germany":             { lat:51,   lng:10,    flag:"🇩🇪" },
+  "France":              { lat:46,   lng:2,     flag:"🇫🇷" },
+  "Brazil":              { lat:-10,  lng:-55,   flag:"🇧🇷" },
+  "Japan":               { lat:36,   lng:138,   flag:"🇯🇵" },
+  "China":               { lat:35,   lng:105,   flag:"🇨🇳" },
+  "Mexico":              { lat:23,   lng:-102,  flag:"🇲🇽" },
+  "South Korea":         { lat:37,   lng:128,   flag:"🇰🇷" },
+  "Netherlands":         { lat:52,   lng:5,     flag:"🇳🇱" },
+  "Spain":               { lat:40,   lng:-3,    flag:"🇪🇸" },
+  "Italy":               { lat:42,   lng:12,    flag:"🇮🇹" },
+  "Russia":              { lat:61,   lng:105,   flag:"🇷🇺" },
+  "Turkey":              { lat:39,   lng:35,    flag:"🇹🇷" },
+  "Saudi Arabia":        { lat:23,   lng:45,    flag:"🇸🇦" },
+  "South Africa":        { lat:-30,  lng:25,    flag:"🇿🇦" },
+  "Argentina":           { lat:-34,  lng:-64,   flag:"🇦🇷" },
+  "Pakistan":            { lat:30,   lng:69,    flag:"🇵🇰" },
+  "Nigeria":             { lat:9,    lng:8,     flag:"🇳🇬" },
+  "Egypt":               { lat:26,   lng:30,    flag:"🇪🇬" },
+  "Vietnam":             { lat:14,   lng:108,   flag:"🇻🇳" },
+  "Thailand":            { lat:15,   lng:101,   flag:"🇹🇭" },
+  "Poland":              { lat:52,   lng:20,    flag:"🇵🇱" },
+  "Sweden":              { lat:60,   lng:18,    flag:"🇸🇪" },
+  "Singapore":           { lat:1,    lng:103,   flag:"🇸🇬" },
+  "United Arab Emirates":{ lat:24,   lng:54,    flag:"🇦🇪" },
+  "Philippines":         { lat:13,   lng:122,   flag:"🇵🇭" },
+  "Malaysia":            { lat:4,    lng:109,   flag:"🇲🇾" },
+  "Indonesia":           { lat:-5,   lng:120,   flag:"🇮🇩" },
+  "Bangladesh":          { lat:24,   lng:90,    flag:"🇧🇩" },
+  "New Zealand":         { lat:-41,  lng:174,   flag:"🇳🇿" },
+  "Portugal":            { lat:39,   lng:-8,    flag:"🇵🇹" },
+  "Belgium":             { lat:50,   lng:4,     flag:"🇧🇪" },
+  "Switzerland":         { lat:47,   lng:8,     flag:"🇨🇭" },
+  "Austria":             { lat:47,   lng:14,    flag:"🇦🇹" },
+  "Denmark":             { lat:56,   lng:10,    flag:"🇩🇰" },
+  "Norway":              { lat:60,   lng:8,     flag:"🇳🇴" },
+  "Finland":             { lat:61,   lng:26,    flag:"🇫🇮" },
+  "Ireland":             { lat:53,   lng:-8,    flag:"🇮🇪" },
+  "Greece":              { lat:38,   lng:24,    flag:"🇬🇷" },
+  "Romania":             { lat:45,   lng:25,    flag:"🇷🇴" },
+  "Czech Republic":      { lat:50,   lng:16,    flag:"🇨🇿" },
+  "Ukraine":             { lat:49,   lng:32,    flag:"🇺🇦" },
+  "Colombia":            { lat:4,    lng:-74,   flag:"🇨🇴" },
+  "Chile":               { lat:-35,  lng:-72,   flag:"🇨🇱" },
+  "Peru":                { lat:-9,   lng:-76,   flag:"🇵🇪" },
+  "Israel":              { lat:31,   lng:35,    flag:"🇮🇱" },
+  "Morocco":             { lat:32,   lng:-5,    flag:"🇲🇦" },
+  "Kenya":               { lat:-1,   lng:37,    flag:"🇰🇪" },
+  "Ghana":               { lat:8,    lng:-1,    flag:"🇬🇭" },
+  "Ethiopia":            { lat:9,    lng:40,    flag:"🇪🇹" },
+  "Hungary":             { lat:47,   lng:19,    flag:"🇭🇺" },
+  "Slovakia":            { lat:48,   lng:19,    flag:"🇸🇰" },
+  "Serbia":              { lat:44,   lng:21,    flag:"🇷🇸" },
+  "Croatia":             { lat:45,   lng:16,    flag:"🇭🇷" },
+  "Taiwan":              { lat:23.5, lng:121,   flag:"🇹🇼" },
+  "Hong Kong":           { lat:22.3, lng:114,   flag:"🇭🇰" },
+  "Iraq":                { lat:33,   lng:44,    flag:"🇮🇶" },
+  "Iran":                { lat:32,   lng:53,    flag:"🇮🇷" },
+  "Algeria":             { lat:28,   lng:2,     flag:"🇩🇿" },
+  "Venezuela":           { lat:8,    lng:-66,   flag:"🇻🇪" },
+  "Ecuador":             { lat:-2,   lng:-78,   flag:"🇪🇨" },
+  // ISO codes (Vercel may return codes)
+  "US": { lat:38,   lng:-97,   flag:"🇺🇸" },
+  "GB": { lat:51.5, lng:-0.1,  flag:"🇬🇧" },
+  "IN": { lat:20,   lng:78,    flag:"🇮🇳" },
+  "CA": { lat:56,   lng:-96,   flag:"🇨🇦" },
+  "AU": { lat:-25,  lng:134,   flag:"🇦🇺" },
+  "DE": { lat:51,   lng:10,    flag:"🇩🇪" },
+  "FR": { lat:46,   lng:2,     flag:"🇫🇷" },
+  "BR": { lat:-10,  lng:-55,   flag:"🇧🇷" },
+  "JP": { lat:36,   lng:138,   flag:"🇯🇵" },
+  "CN": { lat:35,   lng:105,   flag:"🇨🇳" },
+  "MX": { lat:23,   lng:-102,  flag:"🇲🇽" },
+  "KR": { lat:37,   lng:128,   flag:"🇰🇷" },
+  "NL": { lat:52,   lng:5,     flag:"🇳🇱" },
+  "ES": { lat:40,   lng:-3,    flag:"🇪🇸" },
+  "IT": { lat:42,   lng:12,    flag:"🇮🇹" },
+  "RU": { lat:61,   lng:105,   flag:"🇷🇺" },
+  "TR": { lat:39,   lng:35,    flag:"🇹🇷" },
+  "SA": { lat:23,   lng:45,    flag:"🇸🇦" },
+  "ZA": { lat:-30,  lng:25,    flag:"🇿🇦" },
+  "AR": { lat:-34,  lng:-64,   flag:"🇦🇷" },
+  "PK": { lat:30,   lng:69,    flag:"🇵🇰" },
+  "NG": { lat:9,    lng:8,     flag:"🇳🇬" },
+  "EG": { lat:26,   lng:30,    flag:"🇪🇬" },
+  "VN": { lat:14,   lng:108,   flag:"🇻🇳" },
+  "TH": { lat:15,   lng:101,   flag:"🇹🇭" },
+  "PL": { lat:52,   lng:20,    flag:"🇵🇱" },
+  "SE": { lat:60,   lng:18,    flag:"🇸🇪" },
+  "SG": { lat:1,    lng:103,   flag:"🇸🇬" },
+  "AE": { lat:24,   lng:54,    flag:"🇦🇪" },
+  "PH": { lat:13,   lng:122,   flag:"🇵🇭" },
+  "MY": { lat:4,    lng:109,   flag:"🇲🇾" },
+  "ID": { lat:-5,   lng:120,   flag:"🇮🇩" },
+  "BD": { lat:24,   lng:90,    flag:"🇧🇩" },
+  "NZ": { lat:-41,  lng:174,   flag:"🇳🇿" },
+  "PT": { lat:39,   lng:-8,    flag:"🇵🇹" },
+  "BE": { lat:50,   lng:4,     flag:"🇧🇪" },
+  "CH": { lat:47,   lng:8,     flag:"🇨🇭" },
+  "AT": { lat:47,   lng:14,    flag:"🇦🇹" },
+  "DK": { lat:56,   lng:10,    flag:"🇩🇰" },
+  "NO": { lat:60,   lng:8,     flag:"🇳🇴" },
+  "FI": { lat:61,   lng:26,    flag:"🇫🇮" },
+  "IE": { lat:53,   lng:-8,    flag:"🇮🇪" },
+  "GR": { lat:38,   lng:24,    flag:"🇬🇷" },
+  "RO": { lat:45,   lng:25,    flag:"🇷🇴" },
+  "CZ": { lat:50,   lng:16,    flag:"🇨🇿" },
+  "UA": { lat:49,   lng:32,    flag:"🇺🇦" },
+  "CO": { lat:4,    lng:-74,   flag:"🇨🇴" },
+  "CL": { lat:-35,  lng:-72,   flag:"🇨🇱" },
+  "PE": { lat:-9,   lng:-76,   flag:"🇵🇪" },
+  "IL": { lat:31,   lng:35,    flag:"🇮🇱" },
+  "MA": { lat:32,   lng:-5,    flag:"🇲🇦" },
+  "KE": { lat:-1,   lng:37,    flag:"🇰🇪" },
+  "TW": { lat:23.5, lng:121,   flag:"🇹🇼" },
+  "HK": { lat:22.3, lng:114,   flag:"🇭🇰" },
+  "IQ": { lat:33,   lng:44,    flag:"🇮🇶" },
+  "IR": { lat:32,   lng:53,    flag:"🇮🇷" },
+  "DZ": { lat:28,   lng:2,     flag:"🇩🇿" },
+  "VE": { lat:8,    lng:-66,   flag:"🇻🇪" },
+};
+
+function VercelWorldMap({ countries }) {
+  const maxV = Math.max(...countries.map(c => c.total), 1);
+
+  function toXY(lat, lng) {
+    return { x: (lng + 180) / 360 * 800, y: (90 - lat) / 180 * 400 };
+  }
+
+  const dots = countries.map(c => {
+    const m = COUNTRY_META[c.key];
+    if (!m) return null;
+    const { x, y } = toXY(m.lat, m.lng);
+    const r = 5 + (c.total / maxV) * 20;
+    const alpha = 0.35 + (c.total / maxV) * 0.65;
+    return { key: c.key, x, y, r, alpha, total: c.total };
+  }).filter(Boolean);
+
+  // Land color
+  const LC = "#C8D9C8";
+  const LS = "#B2C4B2";
+
+  return (
+    <svg viewBox="0 0 800 400" style={{ width:"100%", display:"block", borderRadius:10 }}>
+      {/* Ocean */}
+      <rect width="800" height="400" fill="#E8F3FB" rx="10"/>
+
+      {/* ── Continents (simplified) ── */}
+      {/* Greenland */}
+      <path d="M260,22 L318,18 L330,36 L318,62 L292,70 L262,62 L248,42 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Iceland */}
+      <path d="M393,40 L420,36 L432,50 L420,62 L400,64 L390,52 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* North America */}
+      <path d="M80,40 L188,38 L214,66 L240,95 L265,135 L265,162 L245,192 L215,230 L195,218 L157,196 L108,186 L74,176 L54,140 L50,107 L62,66 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* South America */}
+      <path d="M215,232 L266,225 L308,252 L318,298 L309,348 L282,392 L256,400 L229,390 L214,348 L206,294 L210,258 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* UK */}
+      <path d="M452,76 L468,70 L476,82 L470,98 L456,102 L449,90 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Scandinavia */}
+      <path d="M476,38 L522,30 L540,52 L528,72 L506,82 L485,78 L473,57 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Europe */}
+      <path d="M436,62 L556,60 L570,82 L566,112 L546,130 L516,140 L488,132 L468,118 L450,93 L436,73 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Africa */}
+      <path d="M456,155 L543,150 L577,172 L581,228 L571,283 L548,340 L520,378 L489,378 L460,347 L443,291 L438,237 L450,184 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Middle East peninsula */}
+      <path d="M543,150 L617,142 L634,160 L627,196 L604,212 L571,210 L549,190 L539,168 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Asia */}
+      <path d="M566,46 L798,46 L798,250 L757,278 L725,267 L706,237 L718,205 L699,181 L671,167 L638,151 L603,142 L576,118 L566,82 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Japan */}
+      <path d="M760,126 L778,120 L787,138 L778,152 L761,148 L756,134 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* Australia */}
+      <path d="M669,312 L795,312 L798,356 L784,396 L740,408 L696,396 L668,360 Z" fill={LC} stroke={LS} strokeWidth="0.5"/>
+      {/* New Zealand */}
+      <ellipse cx="794" cy="386" rx="7" ry="18" fill={LC} stroke={LS} strokeWidth="0.5"/>
+
+      {/* ── Visitor dots ── */}
+      {/* Pulse rings on top countries */}
+      {dots.slice(0, 3).map(d => (
+        <circle key={`pulse-${d.key}`} cx={d.x} cy={d.y} r={d.r + 6} fill="none" stroke="#6490E8" strokeWidth="1.5" opacity="0.3">
+          <animate attributeName="r" values={`${d.r};${d.r + 10}`} dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.3;0" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      ))}
+      {dots.map(d => (
+        <g key={d.key}>
+          <circle cx={d.x} cy={d.y} r={d.r} fill="#6490E8" opacity={d.alpha}/>
+          <circle cx={d.x} cy={d.y} r={Math.min(d.r * 0.35, 5)} fill="#fff" opacity="0.75"/>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function LiveVisitorsPage({ onBack }) {
+  const TOKEN      = import.meta.env.VITE_VERCEL_TOKEN;
+  const PROJECT_ID = import.meta.env.VITE_VERCEL_PROJECT_ID;
+  const TEAM_ID    = import.meta.env.VITE_VERCEL_TEAM_ID || "";
+
+  const [countryData,    setCountryData]    = useState([]);
+  const [pageData,       setPageData]       = useState([]);
+  const [totalVisitors,  setTotalVisitors]  = useState(0);
+  const [loading,        setLoading]        = useState(true);
+  const [refreshing,     setRefreshing]     = useState(false);
+  const [lastUpdated,    setLastUpdated]    = useState(null);
+  const [error,          setError]          = useState(null);
+  const [period,         setPeriod]         = useState("1h");
+  const [countdown,      setCountdown]      = useState(60);
+
+  const configured = !!(TOKEN && PROJECT_ID);
+  const PERIODS = [
+    { key:"5m",  label:"Live (5 min)" },
+    { key:"1h",  label:"Last hour"    },
+    { key:"24h", label:"Last 24 hrs"  },
+  ];
+
+  async function fetchData(isRefresh = false) {
+    if (!configured) { setLoading(false); return; }
+    if (isRefresh) setRefreshing(true); else setLoading(true);
+    setError(null);
+    try {
+      const ms   = period === "5m" ? 5*60*1000 : period === "1h" ? 3600*1000 : 86400*1000;
+      const now  = new Date();
+      const from = new Date(now - ms).toISOString();
+      const to   = now.toISOString();
+      const base = `https://api.vercel.com/v1/web-analytics/breakdown`;
+      const q    = new URLSearchParams({ projectId: PROJECT_ID, from, to, limit: "50" });
+      if (TEAM_ID) q.set("teamId", TEAM_ID);
+      const headers = { Authorization: `Bearer ${TOKEN}` };
+
+      const [cRes, pRes] = await Promise.all([
+        fetch(`${base}?${q}&groupBy=country`, { headers }),
+        fetch(`${base}?${q}&groupBy=path`,    { headers }),
+      ]);
+
+      if (!cRes.ok) throw new Error(`Vercel API error ${cRes.status}: ${await cRes.text()}`);
+
+      const [cJson, pJson] = await Promise.all([cRes.json(), pRes.json()]);
+      const countries = cJson.data || [];
+      const pages     = pJson.data || [];
+      const total     = countries.reduce((s, c) => s + (c.total || 0), 0);
+
+      setCountryData(countries);
+      setPageData(pages);
+      setTotalVisitors(total);
+      setLastUpdated(new Date());
+      setCountdown(60);
+    } catch (e) {
+      setError(e.message || "Failed to fetch analytics. Check your Vercel token and project ID.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!configured) { setLoading(false); return; }
+    fetchData();
+    const iv = setInterval(() => fetchData(true), 60000);
+    return () => clearInterval(iv);
+  }, [period, configured]);
+
+  // Countdown timer display
+  useEffect(() => {
+    if (!configured || !lastUpdated) return;
+    const iv = setInterval(() => {
+      const secs = Math.max(0, 60 - Math.floor((Date.now() - lastUpdated.getTime()) / 1000));
+      setCountdown(secs);
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [lastUpdated, configured]);
+
+  function fmtTime(d) {
+    if (!d) return "";
+    return d.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit", second:"2-digit" });
+  }
+
+  const topCountry   = countryData[0];
+  const countryCount = countryData.length;
+
+  // ── Setup screen ──
+  if (!configured) {
+    return (
+      <div style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,sans-serif" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:6, padding:"12px 24px", background:C.white, borderBottom:`1px solid ${C.gray200}` }}>
+          <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", color:C.gray400, fontSize:13, fontWeight:500, fontFamily:"inherit", padding:0 }}>Analytics</button>
+          <span style={{ color:C.gray300, fontSize:13 }}>/</span>
+          <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Live Visitors</span>
+        </div>
+        <div style={{ padding:32, maxWidth:560, margin:"0 auto" }}>
+          <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:32 }}>
+            <div style={{ width:48, height:48, borderRadius:12, background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:20 }}>
+              <Icon name="broadcast" size={24} color={C.primary}/>
+            </div>
+            <h2 style={{ margin:"0 0 8px", fontSize:20, fontWeight:800, color:C.gray900 }}>Connect Vercel Analytics</h2>
+            <p style={{ margin:"0 0 24px", fontSize:14, color:C.gray500, lineHeight:1.7 }}>
+              To see live visitor data, add your Vercel credentials to the <code style={{ background:C.gray100, padding:"2px 5px", borderRadius:4, fontSize:12 }}>.env</code> file.
+            </p>
+            <div style={{ background:C.gray50, borderRadius:10, border:`1px solid ${C.gray200}`, padding:16, marginBottom:20 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:C.gray400, letterSpacing:.4, textTransform:"uppercase", marginBottom:10 }}>Add to .env</div>
+              {[
+                ["VITE_VERCEL_TOKEN", "Your Vercel personal access token", "vercel.com/account/tokens"],
+                ["VITE_VERCEL_PROJECT_ID", "Your project ID from Vercel dashboard", "vercel.com → project → Settings → General"],
+                ["VITE_VERCEL_TEAM_ID", "Team ID (optional, for team projects)", "vercel.com → team → Settings"],
+              ].map(([key, desc, hint]) => (
+                <div key={key} style={{ marginBottom:12 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:3 }}>
+                    <code style={{ fontSize:12, fontWeight:700, color:C.primary }}>{key}</code>
+                    <span style={{ fontSize:11, color:C.gray400 }}>{hint}</span>
+                  </div>
+                  <div style={{ fontSize:12, color:C.gray500 }}>{desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:12, color:C.gray400, lineHeight:1.6, padding:"12px 14px", background:"#fef9ec", borderRadius:8, border:"1px solid #fde68a" }}>
+              <strong style={{ color:"#92400e" }}>Note:</strong> The Vercel token will be bundled in the JS. Make sure this admin site is access-protected so the token isn't exposed to the public.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
+      <style>{`
+        .lv-wrap    { padding:24px; }
+        .lv-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+        .lv-bottom  { display:grid; grid-template-columns:2fr 1fr; gap:14px; }
+        @media(max-width:900px){ .lv-bottom { grid-template-columns:1fr; } }
+        @media(max-width:640px){
+          .lv-wrap    { padding:16px 12px; }
+          .lv-metrics { grid-template-columns:repeat(2,1fr); gap:10px; }
+        }
+        @keyframes lv-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .lv-live-dot { animation:lv-pulse 1.8s ease-in-out infinite; }
+      `}</style>
+
+      {/* Breadcrumb */}
+      <div style={{ display:"flex", alignItems:"center", gap:6, padding:"12px 24px", background:C.white, borderBottom:`1px solid ${C.gray200}` }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", color:C.gray400, fontSize:13, fontWeight:500, fontFamily:"inherit", padding:0 }}>Analytics</button>
+        <span style={{ color:C.gray300, fontSize:13 }}>/</span>
+        <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Live Visitors</span>
+      </div>
+
+      <div className="lv-wrap">
+        {/* Header */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:22, flexWrap:"wrap", gap:12 }}>
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+              <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:C.gray900, letterSpacing:-0.3 }}>Live Visitors</h1>
+              <span style={{ display:"flex", alignItems:"center", gap:5, padding:"3px 10px", borderRadius:20, background:"#fef2f2", border:"1px solid #fecaca" }}>
+                <span className="lv-live-dot" style={{ width:7, height:7, borderRadius:"50%", background:C.error, display:"inline-block" }}/>
+                <span style={{ fontSize:11, fontWeight:700, color:C.error }}>LIVE</span>
+              </span>
+            </div>
+            <div style={{ fontSize:13, color:C.gray500 }}>
+              Real-time visitor activity · refreshes every 60s
+              {lastUpdated && <span style={{ marginLeft:8, color:C.gray400 }}>· Updated {fmtTime(lastUpdated)}</span>}
+            </div>
+          </div>
+
+          <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+            {/* Period selector */}
+            <div style={{ display:"flex", gap:4 }}>
+              {PERIODS.map(p => (
+                <button key={p.key} onClick={() => setPeriod(p.key)}
+                  style={{ padding:"7px 12px", borderRadius:8, border:`1px solid ${period===p.key ? C.primary : C.gray200}`, background:period===p.key ? C.primaryLight : C.white, color:period===p.key ? C.primary : C.gray600, fontSize:12, fontWeight:period===p.key ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {/* Manual refresh */}
+            <button onClick={() => fetchData(true)} disabled={refreshing}
+              style={{ display:"flex", alignItems:"center", gap:5, padding:"7px 12px", borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, cursor:"pointer", fontFamily:"inherit", opacity:refreshing ? .5 : 1 }}>
+              <Icon name="arrows-clockwise" size={13} color={C.gray600}/>
+              <span style={{ fontSize:12, fontWeight:600, color:C.gray600 }}>
+                {refreshing ? "Refreshing…" : `Refresh (${countdown}s)`}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Error banner */}
+        {error && (
+          <div style={{ background:"#fef2f2", border:"1px solid #fecaca", borderRadius:10, padding:"12px 16px", marginBottom:20, display:"flex", gap:10, alignItems:"flex-start" }}>
+            <Icon name="warning-circle" size={16} color={C.error} style={{ flexShrink:0, marginTop:1 }}/>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#991b1b", marginBottom:2 }}>Failed to load data</div>
+              <div style={{ fontSize:12, color:"#b91c1c", lineHeight:1.5 }}>{error}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Metric Cards */}
+        <div className="lv-metrics">
+          {[
+            { label: period==="5m" ? "Active Visitors" : "Visitors", val: loading ? "—" : totalVisitors.toLocaleString(), icon:"users", color:C.primary, bg:C.primaryLight },
+            { label:"Countries",        val: loading ? "—" : countryCount.toLocaleString(), icon:"globe-hemisphere-west", color:C.success, bg:"#d1fae5" },
+            { label:"Top Country",      val: loading || !topCountry ? "—" : ((COUNTRY_META[topCountry.key]?.flag || "") + " " + topCountry.key), icon:"trophy", color:C.warning, bg:"#fef3c7" },
+          ].map(m => (
+            <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20, display:"flex", alignItems:"flex-start", gap:14 }}>
+              <div style={{ width:40, height:40, borderRadius:10, background:m.bg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <Icon name={m.icon} size={18} color={m.color}/>
+              </div>
+              <div style={{ minWidth:0 }}>
+                <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.val}</div>
+                <div style={{ fontSize:13, fontWeight:600, color:C.gray500 }}>{m.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* World Map */}
+        <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20, marginBottom:14 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:14 }}>
+            Visitor Locations — {PERIODS.find(p=>p.key===period)?.label}
+          </div>
+          {loading ? (
+            <div style={{ height:280, background:C.gray50, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", color:C.gray300, fontSize:14 }}>Loading map…</div>
+          ) : (
+            <VercelWorldMap countries={countryData}/>
+          )}
+          {!loading && countryData.length > 0 && (
+            <div style={{ marginTop:10, display:"flex", gap:16, flexWrap:"wrap" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:C.gray500 }}>
+                <svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#6490E8" opacity="0.8"/></svg>
+                Larger circle = more visitors
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:C.gray500 }}>
+                <svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="none" stroke="#6490E8" strokeWidth="1.5" opacity="0.4"/></svg>
+                Pulsing = top 3 countries
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom: Countries table + Top pages */}
+        <div className="lv-bottom">
+          {/* Countries */}
+          <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:16 }}>
+              Top Countries by Visitors
+            </div>
+            {loading ? (
+              <div style={{ color:C.gray400, fontSize:13 }}>Loading…</div>
+            ) : countryData.length === 0 ? (
+              <div style={{ textAlign:"center", padding:"32px 0" }}>
+                <Icon name="globe" size={32} color={C.gray200}/>
+                <div style={{ fontSize:14, color:C.gray400, marginTop:8 }}>No visitor data for this period</div>
+              </div>
+            ) : countryData.map((c, i) => {
+              const meta = COUNTRY_META[c.key];
+              const barW = `${Math.round((c.total / countryData[0].total) * 100)}%`;
+              return (
+                <div key={c.key} style={{ padding:"10px 0", borderBottom: i < countryData.length-1 ? `1px solid ${C.gray100}` : "none" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:18, lineHeight:1 }}>{meta?.flag || "🌐"}</span>
+                      <span style={{ fontSize:13, fontWeight:600, color:C.gray800 }}>{c.key}</span>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <span style={{ fontSize:13, fontWeight:700, color:C.gray900 }}>{(c.total || 0).toLocaleString()}</span>
+                      <span style={{ fontSize:11, fontWeight:600, color:C.gray400, minWidth:36, textAlign:"right" }}>
+                        {typeof c.percentage === "number" ? `${Math.round(c.percentage)}%` : ""}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ height:5, background:C.gray100, borderRadius:3, overflow:"hidden" }}>
+                    <div style={{ height:"100%", width:barW, background:C.primary, borderRadius:3, transition:"width .4s ease" }}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Active Pages */}
+          <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:C.gray500, letterSpacing:.4, textTransform:"uppercase", marginBottom:16 }}>
+              Active Pages
+            </div>
+            {loading ? (
+              <div style={{ color:C.gray400, fontSize:13 }}>Loading…</div>
+            ) : pageData.length === 0 ? (
+              <div style={{ textAlign:"center", padding:"32px 0" }}>
+                <Icon name="browsers" size={32} color={C.gray200}/>
+                <div style={{ fontSize:14, color:C.gray400, marginTop:8 }}>No page data</div>
+              </div>
+            ) : pageData.slice(0, 15).map((p, i) => (
+              <div key={p.key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom: i < Math.min(pageData.length,15)-1 ? `1px solid ${C.gray100}` : "none", gap:8 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+                  <div style={{ width:20, height:20, borderRadius:4, background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <Icon name="browsers" size={10} color={C.primary}/>
+                  </div>
+                  <span style={{ fontSize:12, color:C.gray700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}
+                    title={p.key}>{p.key || "/"}</span>
+                </div>
+                <span style={{ fontSize:12, fontWeight:700, color:C.gray900, flexShrink:0 }}>{(p.total||0).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -4486,6 +5008,7 @@ export default function App() {
   const [analyticsSession, setAnalyticsSession] = useState(null);
   const [reviewsSession,   setReviewsSession]   = useState(null);
   const [commentsOpen,     setCommentsOpen]     = useState(false);
+  const [liveVisitorsOpen, setLiveVisitorsOpen] = useState(false);
   const { toasts, toast, remove } = useToast();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -4777,7 +5300,8 @@ export default function App() {
     if (page==="admin-analytics" && analyticsSession) return <SessionAnalyticsPage session={analyticsSession} onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(null); }}/>;
     if (page==="admin-analytics" && reviewsSession)   return <SessionReviewsPage session={reviewsSession} onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(null); }}/>;
     if (page==="admin-analytics" && commentsOpen)     return <AllCommentsPage onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setCommentsOpen(false); }}/>;
-    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(s); }} onOpenSessionReviews={s => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(s); }} onOpenComments={() => { scrollContainerRef.current?.scrollTo(0,0); setCommentsOpen(true); }} sessions={sessions}/>;
+    if (page==="admin-analytics" && liveVisitorsOpen) return <LiveVisitorsPage onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setLiveVisitorsOpen(false); }}/>;
+    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(s); }} onOpenSessionReviews={s => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(s); }} onOpenComments={() => { scrollContainerRef.current?.scrollTo(0,0); setCommentsOpen(true); }} onOpenLiveVisitors={() => { scrollContainerRef.current?.scrollTo(0,0); setLiveVisitorsOpen(true); }} sessions={sessions}/>;
     if (page==="admin-profile") return <AdminProfilePage onBack={()=>nav("admin-overview")} userName={userName} userEmail={userEmail} userAvatar={userAvatar}/>;
     return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions}/>;
   }
@@ -4841,7 +5365,7 @@ export default function App() {
         `}</style>
 
         <div className="app-tabbar-wrap">
-          {page !== "admin-create" && page !== "admin-edit" && !analyticsSession && !reviewsSession && !commentsOpen && (
+          {page !== "admin-create" && page !== "admin-edit" && !analyticsSession && !reviewsSession && !commentsOpen && !liveVisitorsOpen && (
             <TabBar
               active={activePage}
               onChange={nav}
@@ -4867,7 +5391,7 @@ export default function App() {
       </div>
 
       {/* Mobile bottom nav */}
-      {!analyticsSession && !reviewsSession && !commentsOpen && (
+      {!analyticsSession && !reviewsSession && !commentsOpen && !liveVisitorsOpen && (
         <div className="app-bottom-nav" style={{ display:"none" }}>
           <LimelightBottomNav
             active={activePage}
