@@ -2484,6 +2484,8 @@ function AllCommentsPage({ onBack }) {
   const [sessionFilter, setSessionFilter] = useState("all");
   const [expandedThread, setExpandedThread] = useState(null);
   const [deleteTarget,  setDeleteTarget]  = useState(null);
+  const [selected,      setSelected]      = useState(new Set());
+  const [bulkDeleting,  setBulkDeleting]  = useState(false);
   const [range,         setRange]         = useState("28d");
   const [showRange,     setShowRange]     = useState(false);
 
@@ -2514,6 +2516,33 @@ function AllCommentsPage({ onBack }) {
     if (deleteTarget.table === "session_comments") setSessionComments(prev => prev.filter(c => c.id !== deleteTarget.id));
     else setSessionReviews(prev => prev.filter(r => r.id !== deleteTarget.id));
     setDeleteTarget(null);
+  }
+
+  async function handleBulkDelete() {
+    if (selected.size === 0) return;
+    setBulkDeleting(true);
+    const ids = [...selected];
+    // Figure out table for each id
+    const commentIds = new Set(sessionComments.map(c => c.id));
+    const reviewIds  = new Set(sessionReviews.map(r => r.id));
+    const toDelComments = ids.filter(id => commentIds.has(id));
+    const toDelReviews  = ids.filter(id => reviewIds.has(id));
+    await Promise.all([
+      ...toDelComments.map(id => supabase.from("session_comments").delete().eq("id", id)),
+      ...toDelReviews.map(id  => supabase.from("session_reviews").delete().eq("id", id)),
+    ]);
+    setSessionComments(prev => prev.filter(c => !selected.has(c.id)));
+    setSessionReviews(prev  => prev.filter(r => !selected.has(r.id)));
+    setSelected(new Set());
+    setBulkDeleting(false);
+  }
+
+  function toggleSelect(id) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   }
 
   function fmtDateShort(iso) {
@@ -2549,6 +2578,20 @@ function AllCommentsPage({ onBack }) {
     repliesByParent[r.parent_id].push(r);
   });
 
+  // Select-all helpers
+  const allFilteredIds   = filtered.map(i => i.id);
+  const selectedInView   = allFilteredIds.filter(id => selected.has(id));
+  const allInViewSelected = allFilteredIds.length > 0 && selectedInView.length === allFilteredIds.length;
+  const someInViewSelected = selectedInView.length > 0 && !allInViewSelected;
+
+  function toggleSelectAll() {
+    if (allInViewSelected) {
+      setSelected(prev => { const next = new Set(prev); allFilteredIds.forEach(id => next.delete(id)); return next; });
+    } else {
+      setSelected(prev => { const next = new Set(prev); allFilteredIds.forEach(id => next.add(id)); return next; });
+    }
+  }
+
   // Deterministic avatar color from author name
   function avatarColor(name) {
     const palette = ["#185FA5","#639922","#A34B4B","#6B4BA3","#A3874B","#1F7A6E","#A3654B"];
@@ -2566,21 +2609,27 @@ function AllCommentsPage({ onBack }) {
       <style>{`
         .ac-wrap { padding:20px 24px; }
         .ac-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
-        .ac-row { display:grid; grid-template-columns:1fr 150px 110px 80px 36px; gap:16px; align-items:center; padding:13px 16px; transition:background .12s; cursor:default; }
+        .ac-row { display:grid; grid-template-columns:36px 1fr 150px 110px 80px 36px; gap:16px; align-items:center; padding:12px 16px; transition:background .12s; cursor:default; }
         .ac-row:hover { background:${C.gray50}; }
-        .ac-hdr { display:grid; grid-template-columns:1fr 150px 110px 80px 36px; gap:16px; align-items:center; padding:9px 16px; }
+        .ac-row-sel { background:${C.primaryLight} !important; }
+        .ac-hdr { display:grid; grid-template-columns:36px 1fr 150px 110px 80px 36px; gap:16px; align-items:center; padding:9px 16px; }
         .ac-del { background:none; border:none; padding:6px; border-radius:6px; cursor:pointer; color:${C.gray400}; display:flex; align-items:center; justify-content:center; transition:background .12s, color .12s; }
         .ac-del:hover { background:#fee2e2; color:${C.error}; }
+        .ac-cb { width:16px; height:16px; border-radius:4px; border:1.5px solid ${C.gray300}; appearance:none; -webkit-appearance:none; cursor:pointer; background:${C.white}; display:grid; place-items:center; transition:border-color .12s, background .12s; flex-shrink:0; }
+        .ac-cb:checked { background:${C.primary}; border-color:${C.primary}; }
+        .ac-cb:checked::after { content:""; width:9px; height:9px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M10 3L5 8.5 2 5.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:center; background-size:contain; }
+        .ac-cb:indeterminate { background:${C.primary}; border-color:${C.primary}; }
+        .ac-cb:indeterminate::after { content:""; width:8px; height:2px; background:#fff; border-radius:2px; }
         @media(max-width:860px){
-          .ac-row { grid-template-columns:1fr 120px 90px 36px; }
-          .ac-hdr { grid-template-columns:1fr 120px 90px 36px; }
+          .ac-row { grid-template-columns:36px 1fr 120px 90px 36px; }
+          .ac-hdr { grid-template-columns:36px 1fr 120px 90px 36px; }
           .ac-col-date { display:none; }
         }
         @media(max-width:620px){
           .ac-wrap { padding:14px 12px; }
           .ac-metrics { grid-template-columns:1fr 1fr; }
-          .ac-row { grid-template-columns:1fr 90px 36px; }
-          .ac-hdr { grid-template-columns:1fr 90px 36px; }
+          .ac-row { grid-template-columns:36px 1fr 90px 36px; }
+          .ac-hdr { grid-template-columns:36px 1fr 90px 36px; }
           .ac-col-author { display:none; }
         }
       `}</style>
@@ -2665,12 +2714,45 @@ function AllCommentsPage({ onBack }) {
           )}
         </div>
 
+        {/* Floating action bar */}
+        {selected.size > 0 && (
+          <div style={{ position:"sticky", top:0, zIndex:40, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between", background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"10px 16px", boxShadow:"0 2px 12px rgba(0,0,0,0.08)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ width:24, height:24, borderRadius:6, background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <Icon name="check-square" size={14} color={C.primary}/>
+              </div>
+              <span style={{ fontSize:14, fontWeight:500, color:C.gray800 }}>
+                <strong style={{ fontWeight:700 }}>{selected.size}</strong> {selected.size === 1 ? "comment" : "comments"} selected
+              </span>
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={() => setSelected(new Set())}
+                style={{ padding:"6px 14px", borderRadius:7, border:`1px solid ${C.gray200}`, background:C.white, fontSize:13, fontWeight:500, color:C.gray600, cursor:"pointer", fontFamily:"inherit" }}>
+                Clear
+              </button>
+              <button onClick={handleBulkDelete} disabled={bulkDeleting}
+                style={{ padding:"6px 14px", borderRadius:7, border:"none", background:C.error, fontSize:13, fontWeight:600, color:"#fff", cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", gap:6, opacity:bulkDeleting ? .6 : 1 }}>
+                <Icon name="trash" size={13} color="#fff"/>
+                {bulkDeleting ? "Deleting…" : `Delete ${selected.size}`}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Table */}
         <div style={{ background:C.white, borderRadius:12, border:`0.5px solid ${C.gray200}`, overflow:"hidden" }}>
           {/* Header row */}
           <div className="ac-hdr" style={{ background:C.gray50, borderBottom:`0.5px solid ${C.gray200}` }}>
-            {["Comment","Author","Type","Date",""].map((h, i) => (
-              <div key={i} className={i===1?"ac-col-author":i===3?"ac-col-date":""} style={{ fontSize:11, fontWeight:500, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>{h}</div>
+            {/* Select-all checkbox */}
+            <div style={{ display:"flex", alignItems:"center" }}>
+              <input type="checkbox" className="ac-cb"
+                checked={allInViewSelected}
+                ref={el => { if (el) el.indeterminate = someInViewSelected; }}
+                onChange={toggleSelectAll}
+                disabled={filtered.length === 0}/>
+            </div>
+            {[["Comment"],["Author","ac-col-author"],["Type"],["Date","ac-col-date"],[""]].map(([h, cls], i) => (
+              <div key={i} className={cls||""} style={{ fontSize:11, fontWeight:500, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>{h}</div>
             ))}
           </div>
 
@@ -2685,11 +2767,16 @@ function AllCommentsPage({ onBack }) {
           ) : filtered.map((item, idx) => {
             const replies    = item._type === "comment" ? (repliesByParent[item.id] || []) : [];
             const isExpanded = expandedThread === item.id;
+            const isSelected = selected.has(item.id);
             const avColor    = avatarColor(item.author_name);
             const avInitials = initials(item.author_name).toUpperCase();
             return (
               <div key={item.id} style={{ borderTop: idx > 0 ? `0.5px solid ${C.gray100}` : "none" }}>
-                <div className="ac-row">
+                <div className={`ac-row${isSelected ? " ac-row-sel" : ""}`}>
+                  {/* Checkbox */}
+                  <div style={{ display:"flex", alignItems:"center" }}>
+                    <input type="checkbox" className="ac-cb" checked={isSelected} onChange={() => toggleSelect(item.id)}/>
+                  </div>
                   {/* Comment + session sub-label */}
                   <div style={{ minWidth:0 }}>
                     <div style={{ fontSize:14, color:C.gray900, lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
