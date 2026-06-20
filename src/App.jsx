@@ -1930,7 +1930,7 @@ function MiniBarChart48({ data }) {
   );
 }
 
-function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionReviews, sessions = [] }) {
+function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionReviews, onOpenComments, sessions = [] }) {
   const [range,     setRange]     = useState("28d");
   const [showRange, setShowRange] = useState(false);
   const [views,     setViews]     = useState([]);
@@ -2025,6 +2025,12 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
       {/* Header */}
       <div className="aa-header">
         <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:C.gray900, letterSpacing:-0.3, lineHeight:1.25 }}>Analytics</h1>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <button onClick={() => onOpenComments?.()}
+            style={{ display:"flex", alignItems:"center", gap:6, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"8px 12px", cursor:"pointer", fontFamily:"inherit" }}>
+            <Icon name="chat-dots" size={14} color={C.primary}/>
+            <span style={{ fontSize:14, fontWeight:600, color:C.gray900 }}>Comments</span>
+          </button>
         <div style={{ position:"relative" }}>
           <button onClick={() => setShowRange(v => !v)}
             style={{ display:"flex", alignItems:"center", gap:6, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"8px 12px", cursor:"pointer", fontFamily:"inherit" }}>
@@ -2041,6 +2047,7 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
               ))}
             </div>
           )}
+        </div>
         </div>
       </div>
 
@@ -2452,6 +2459,347 @@ function SessionReviewsPage({ session, onBack }) {
             <div style={{ display:"flex", gap:10 }}>
               <button onClick={() => setDeleteId(null)} style={{ flex:1, padding:"10px 0", borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, fontSize:14, fontWeight:600, cursor:"pointer", color:C.gray700 }}>Cancel</button>
               <button onClick={() => handleDelete(deleteId)} style={{ flex:1, padding:"10px 0", borderRadius:8, border:"none", background:C.error, fontSize:14, fontWeight:700, cursor:"pointer", color:"#fff" }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ALL COMMENTS PAGE
+───────────────────────────────────────────────────────────────────────────── */
+function AllCommentsPage({ onBack }) {
+  const [sessionComments, setSessionComments] = useState([]);
+  const [sessionReviews,  setSessionReviews]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [search,   setSearch]   = useState("");
+  const [typeFilter, setTypeFilter] = useState("all"); // "all" | "comment" | "review"
+  const [sessionFilter, setSessionFilter] = useState("all");
+  const [expandedThread, setExpandedThread] = useState(null); // comment id with replies open
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, table }
+  const [range, setRange] = useState("28d");
+  const [showRange, setShowRange] = useState(false);
+
+  const RANGES = [
+    { key:"7d",  label:"Last 7 days"  },
+    { key:"28d", label:"Last 28 days" },
+    { key:"90d", label:"Last 90 days" },
+    { key:"all", label:"All time"     },
+  ];
+  const activeRange = RANGES.find(r => r.key === range);
+
+  useEffect(() => {
+    setLoading(true);
+    const days = range === "7d" ? 7 : range === "28d" ? 28 : range === "90d" ? 90 : null;
+    const since = days ? new Date(Date.now() - days * 86400000).toISOString() : null;
+
+    const qComments = since
+      ? supabase.from("session_comments").select("*").gte("created_at", since).order("created_at", { ascending: false })
+      : supabase.from("session_comments").select("*").order("created_at", { ascending: false });
+
+    const qReviews = since
+      ? supabase.from("session_reviews").select("*").gte("created_at", since).order("created_at", { ascending: false })
+      : supabase.from("session_reviews").select("*").order("created_at", { ascending: false });
+
+    Promise.all([qComments, qReviews]).then(([{ data: cd }, { data: rd }]) => {
+      setSessionComments(cd || []);
+      setSessionReviews(rd || []);
+      setLoading(false);
+    });
+  }, [range]);
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await supabase.from(deleteTarget.table).delete().eq("id", deleteTarget.id);
+    if (deleteTarget.table === "session_comments") {
+      setSessionComments(prev => prev.filter(c => c.id !== deleteTarget.id));
+    } else {
+      setSessionReviews(prev => prev.filter(r => r.id !== deleteTarget.id));
+    }
+    setDeleteTarget(null);
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) + " · " + d.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
+  }
+
+  function fmtDateShort(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month:"short", day:"numeric" });
+  }
+
+  // Build unified list
+  const allItems = [
+    ...sessionComments.map(c => ({ ...c, _type: "comment", _body: c.body })),
+    ...sessionReviews.map(r => ({ ...r, _type: "review", _body: r.review })),
+  ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  // All unique sessions
+  const allSessions = [...new Map(allItems.filter(i => i.session_id).map(i => [i.session_id, i.session_title])).entries()];
+
+  // Filter
+  const filtered = allItems.filter(item => {
+    if (typeFilter !== "all" && item._type !== typeFilter) return false;
+    if (sessionFilter !== "all" && item.session_id !== sessionFilter) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      if (
+        !(item._body || "").toLowerCase().includes(q) &&
+        !(item.author_name || "").toLowerCase().includes(q) &&
+        !(item.session_title || "").toLowerCase().includes(q)
+      ) return false;
+    }
+    return true;
+  });
+
+  // Top-level session comments (no parent)
+  const topLevelComments = sessionComments.filter(c => !c.parent_id);
+  const totalComments = topLevelComments.length;
+  const totalReviews  = sessionReviews.length;
+  const totalAll      = sessionComments.length + sessionReviews.length;
+
+  // Replies grouped by parent_id
+  const repliesByParent = {};
+  sessionComments.filter(c => c.parent_id).forEach(r => {
+    repliesByParent[r.parent_id] = repliesByParent[r.parent_id] || [];
+    repliesByParent[r.parent_id].push(r);
+  });
+
+  return (
+    <div style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
+      <style>{`
+        .ac-wrap { padding:24px; }
+        .ac-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+        .ac-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
+        .ac-table-row { display:grid; grid-template-columns:1fr 140px 140px 100px 120px; gap:12px; align-items:center; padding:14px 16px; }
+        .ac-table-header { display:grid; grid-template-columns:1fr 140px 140px 100px 120px; gap:12px; align-items:center; padding:10px 16px; }
+        @media(max-width:900px){
+          .ac-table-row { grid-template-columns:1fr 120px 90px; }
+          .ac-table-header { grid-template-columns:1fr 120px 90px; }
+          .ac-col-session { display:none; }
+          .ac-col-date { display:none; }
+        }
+        @media(max-width:640px){
+          .ac-wrap { padding:16px 12px; }
+          .ac-metrics { grid-template-columns:repeat(2,1fr); }
+          .ac-table-row { grid-template-columns:1fr 90px; }
+          .ac-table-header { grid-template-columns:1fr 90px; }
+          .ac-col-author { display:none; }
+        }
+      `}</style>
+
+      {/* Breadcrumb */}
+      <div style={{ display:"flex", alignItems:"center", gap:6, margin:"0 0 0", padding:"12px 24px", background:C.white, borderBottom:`1px solid ${C.gray200}` }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", cursor:"pointer", color:C.gray400, fontSize:13, fontWeight:500, fontFamily:"inherit", padding:0 }}>Analytics</button>
+        <span style={{ color:C.gray300, fontSize:13 }}>/</span>
+        <span style={{ fontSize:13, fontWeight:600, color:C.gray700 }}>Comments</span>
+      </div>
+
+      <div className="ac-wrap">
+        {/* Header */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
+          <div>
+            <h1 style={{ margin:"0 0 2px", fontSize:22, fontWeight:700, color:C.gray900, letterSpacing:-0.3 }}>Comments</h1>
+            <div style={{ fontSize:13, color:C.gray500 }}>All session comments and reviews across the platform</div>
+          </div>
+          <div style={{ position:"relative" }}>
+            <button onClick={() => setShowRange(v => !v)}
+              style={{ display:"flex", alignItems:"center", gap:6, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, padding:"8px 12px", cursor:"pointer", fontFamily:"inherit" }}>
+              <span style={{ fontSize:14, fontWeight:600, color:C.gray900 }}>{activeRange.label}</span>
+              <Icon name="caret-down" size={13} color={C.gray500}/>
+            </button>
+            {showRange && (
+              <div style={{ position:"absolute", right:0, top:"calc(100% + 4px)", background:C.white, border:`1px solid ${C.gray200}`, borderRadius:10, boxShadow:"0 8px 24px rgba(0,0,0,0.10)", zIndex:60, minWidth:150, overflow:"hidden" }}>
+                {RANGES.map(r => (
+                  <button key={r.key} onClick={() => { setRange(r.key); setShowRange(false); }}
+                    style={{ display:"block", width:"100%", padding:"10px 16px", background:range===r.key ? C.gray50 : "none", border:"none", cursor:"pointer", fontSize:14, color:range===r.key ? C.gray900 : C.gray600, fontWeight:range===r.key ? 700 : 400, textAlign:"left", fontFamily:"inherit" }}>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Metric Cards */}
+        <div className="ac-metrics">
+          {[
+            { label:"Total Comments", val: loading ? "—" : totalAll.toLocaleString(),      icon:"chat-dots",    color:C.primary,   bg:C.primaryLight },
+            { label:"Session Comments", val: loading ? "—" : totalComments.toLocaleString(), icon:"chat-circle",  color:C.success,   bg:"#d1fae5" },
+            { label:"Reviews",        val: loading ? "—" : totalReviews.toLocaleString(),  icon:"star",         color:C.warning,   bg:"#fef3c7" },
+          ].map(m => (
+            <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:20, display:"flex", alignItems:"flex-start", gap:14 }}>
+              <div style={{ width:40, height:40, borderRadius:10, background:m.bg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <Icon name={m.icon} size={18} color={m.color}/>
+              </div>
+              <div>
+                <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{m.val}</div>
+                <div style={{ fontSize:13, fontWeight:600, color:C.gray500 }}>{m.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters */}
+        <div className="ac-filters">
+          {/* Search */}
+          <div style={{ position:"relative", flex:"1 1 200px", minWidth:180 }}>
+            <Icon name="magnifying-glass" size={14} color={C.gray400} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)" }}/>
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search comments, authors…"
+              style={{ width:"100%", paddingLeft:32, paddingRight:12, paddingTop:9, paddingBottom:9, borderRadius:10, border:`1px solid ${C.gray200}`, background:C.white, fontSize:13, fontFamily:"inherit", color:C.gray900, outline:"none", boxSizing:"border-box" }}
+            />
+          </div>
+          {/* Type filter */}
+          <div style={{ display:"flex", gap:4 }}>
+            {[["all","All"],["comment","Comments"],["review","Reviews"]].map(([key,label]) => (
+              <button key={key} onClick={() => setTypeFilter(key)}
+                style={{ padding:"8px 14px", borderRadius:8, border:`1px solid ${typeFilter===key ? C.primary : C.gray200}`, background:typeFilter===key ? C.primaryLight : C.white, color:typeFilter===key ? C.primary : C.gray600, fontSize:13, fontWeight:typeFilter===key ? 700 : 500, cursor:"pointer", fontFamily:"inherit" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* Session filter */}
+          {allSessions.length > 1 && (
+            <select value={sessionFilter} onChange={e => setSessionFilter(e.target.value)}
+              style={{ padding:"8px 12px", borderRadius:10, border:`1px solid ${C.gray200}`, background:C.white, fontSize:13, fontFamily:"inherit", color:C.gray700, cursor:"pointer", outline:"none" }}>
+              <option value="all">All sessions</option>
+              {allSessions.map(([id, title]) => (
+                <option key={id} value={id}>{title || id}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Table */}
+        <div style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, overflow:"hidden" }}>
+          {/* Table Header */}
+          <div className="ac-table-header" style={{ borderBottom:`1px solid ${C.gray100}`, background:C.gray50 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>Comment</div>
+            <div className="ac-col-author" style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>Author</div>
+            <div className="ac-col-session" style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>Session</div>
+            <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>Type</div>
+            <div className="ac-col-date" style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>Date</div>
+            <div></div>
+          </div>
+
+          {loading ? (
+            <div style={{ padding:"48px 0", textAlign:"center", color:C.gray400, fontSize:14 }}>Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding:"56px 0", textAlign:"center" }}>
+              <Icon name="chat-circle" size={36} color={C.gray200}/>
+              <div style={{ fontSize:15, fontWeight:600, color:C.gray400, marginTop:12 }}>No comments found</div>
+              <div style={{ fontSize:13, color:C.gray300, marginTop:4 }}>Try adjusting your filters or date range</div>
+            </div>
+          ) : filtered.map((item, idx) => {
+            const replies = item._type === "comment" ? (repliesByParent[item.id] || []) : [];
+            const isExpanded = expandedThread === item.id;
+            return (
+              <div key={item.id} style={{ borderBottom: idx < filtered.length - 1 ? `1px solid ${C.gray100}` : "none" }}>
+                <div className="ac-table-row" style={{ background: isExpanded ? C.gray50 : "transparent" }}>
+                  {/* Comment body */}
+                  <div style={{ minWidth:0 }}>
+                    <div style={{ fontSize:13, color:C.gray900, lineHeight:1.55, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
+                      {item._body || <span style={{ color:C.gray300, fontStyle:"italic" }}>No content</span>}
+                    </div>
+                    {replies.length > 0 && (
+                      <button onClick={() => setExpandedThread(isExpanded ? null : item.id)}
+                        style={{ marginTop:5, background:"none", border:"none", cursor:"pointer", fontSize:12, fontWeight:600, color:C.primary, padding:0, fontFamily:"inherit" }}>
+                        {isExpanded ? "Hide" : `${replies.length} repl${replies.length===1?"y":"ies"}`}
+                      </button>
+                    )}
+                  </div>
+                  {/* Author */}
+                  <div className="ac-col-author" style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+                    <div style={{ width:28, height:28, borderRadius:"50%", background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden" }}>
+                      {item.author_avatar
+                        ? <img src={item.author_avatar} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                        : <span style={{ fontSize:11, fontWeight:700, color:C.primary }}>{(item.author_name||"A")[0].toUpperCase()}</span>}
+                    </div>
+                    <span style={{ fontSize:13, fontWeight:600, color:C.gray700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.author_name || "Anonymous"}</span>
+                  </div>
+                  {/* Session */}
+                  <div className="ac-col-session" style={{ minWidth:0 }}>
+                    <span style={{ fontSize:12, color:C.gray500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", display:"block" }}>{item.session_title || "—"}</span>
+                  </div>
+                  {/* Type badge */}
+                  <div>
+                    {item._type === "comment" ? (
+                      <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 9px", borderRadius:6, background:"#d1fae5", color:C.success, fontSize:11, fontWeight:700 }}>
+                        <Icon name="chat-circle" size={10} color={C.success}/> Comment
+                      </span>
+                    ) : (
+                      <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"3px 9px", borderRadius:6, background:"#fef3c7", color:"#92400e", fontSize:11, fontWeight:700 }}>
+                        <Icon name="star" size={10} color={C.warning}/> Review
+                        {item.rating > 0 && <span style={{ color:C.warning }}>· {item.rating}★</span>}
+                      </span>
+                    )}
+                  </div>
+                  {/* Date */}
+                  <div className="ac-col-date" style={{ fontSize:12, color:C.gray400, whiteSpace:"nowrap" }}>{fmtDateShort(item.created_at)}</div>
+                  {/* Delete */}
+                  <div>
+                    <button onClick={() => setDeleteTarget({ id: item.id, table: item._type === "comment" ? "session_comments" : "session_reviews" })}
+                      style={{ width:30, height:30, borderRadius:7, border:`1px solid ${C.gray200}`, background:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      <Icon name="trash" size={13} color={C.error}/>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Thread replies */}
+                {isExpanded && replies.length > 0 && (
+                  <div style={{ padding:"0 16px 14px 16px", borderTop:`1px solid ${C.gray100}`, background:C.gray50 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.4, textTransform:"uppercase", padding:"12px 0 8px" }}>Thread Replies</div>
+                    {replies.map((rep, ri) => (
+                      <div key={rep.id} style={{ display:"flex", gap:10, padding:"10px 0", borderTop: ri > 0 ? `1px solid ${C.gray100}` : "none" }}>
+                        <div style={{ width:26, height:26, borderRadius:"50%", background:C.primaryLight, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden" }}>
+                          {rep.author_avatar
+                            ? <img src={rep.author_avatar} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                            : <span style={{ fontSize:10, fontWeight:700, color:C.primary }}>{(rep.author_name||"A")[0].toUpperCase()}</span>}
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+                            <span style={{ fontSize:12, fontWeight:700, color:C.gray800 }}>{rep.author_name || "Anonymous"}</span>
+                            <span style={{ fontSize:11, color:C.gray400 }}>{fmtDateShort(rep.created_at)}</span>
+                          </div>
+                          <div style={{ fontSize:13, color:C.gray700, lineHeight:1.5 }}>{rep.body}</div>
+                        </div>
+                        <button onClick={() => setDeleteTarget({ id: rep.id, table: "session_comments" })}
+                          style={{ width:26, height:26, borderRadius:6, border:`1px solid ${C.gray200}`, background:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <Icon name="trash" size={11} color={C.error}/>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer count */}
+        {!loading && filtered.length > 0 && (
+          <div style={{ marginTop:12, fontSize:12, color:C.gray400, textAlign:"right" }}>
+            Showing {filtered.length} of {allItems.length} comment{allItems.length !== 1 ? "s" : ""}
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirm Modal */}
+      {deleteTarget && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }}>
+          <div style={{ background:C.white, borderRadius:16, padding:28, maxWidth:380, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }}>
+            <div style={{ fontSize:16, fontWeight:800, color:C.gray900, marginBottom:8 }}>Delete this comment?</div>
+            <div style={{ fontSize:13, color:C.gray500, marginBottom:24, lineHeight:1.6 }}>This will permanently remove the comment and it will no longer appear on the user site.</div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={() => setDeleteTarget(null)} style={{ flex:1, padding:"10px 0", borderRadius:8, border:`1px solid ${C.gray200}`, background:C.white, fontSize:14, fontWeight:600, cursor:"pointer", color:C.gray700 }}>Cancel</button>
+              <button onClick={handleDelete} style={{ flex:1, padding:"10px 0", borderRadius:8, border:"none", background:C.error, fontSize:14, fontWeight:700, cursor:"pointer", color:"#fff" }}>Delete</button>
             </div>
           </div>
         </div>
@@ -4137,6 +4485,7 @@ export default function App() {
   const [editingSession, setEditingSession] = useState(null);
   const [analyticsSession, setAnalyticsSession] = useState(null);
   const [reviewsSession,   setReviewsSession]   = useState(null);
+  const [commentsOpen,     setCommentsOpen]     = useState(false);
   const { toasts, toast, remove } = useToast();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -4427,7 +4776,8 @@ export default function App() {
     if (page==="admin-edit" && editingSession) return <AdminEditSession session={editingSession} onBack={()=>nav("admin-sessions")} toast={toast} onSave={updateSession}/>;
     if (page==="admin-analytics" && analyticsSession) return <SessionAnalyticsPage session={analyticsSession} onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(null); }}/>;
     if (page==="admin-analytics" && reviewsSession)   return <SessionReviewsPage session={reviewsSession} onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(null); }}/>;
-    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(s); }} onOpenSessionReviews={s => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(s); }} sessions={sessions}/>;
+    if (page==="admin-analytics" && commentsOpen)     return <AllCommentsPage onBack={() => { scrollContainerRef.current?.scrollTo(0,0); setCommentsOpen(false); }}/>;
+    if (page==="admin-analytics") return <AnalyticsPage onEditSession={openEdit} onOpenSessionAnalytics={s => { scrollContainerRef.current?.scrollTo(0,0); setAnalyticsSession(s); }} onOpenSessionReviews={s => { scrollContainerRef.current?.scrollTo(0,0); setReviewsSession(s); }} onOpenComments={() => { scrollContainerRef.current?.scrollTo(0,0); setCommentsOpen(true); }} sessions={sessions}/>;
     if (page==="admin-profile") return <AdminProfilePage onBack={()=>nav("admin-overview")} userName={userName} userEmail={userEmail} userAvatar={userAvatar}/>;
     return <AdminOverview onNavigate={nav} onEditSession={openEdit} toast={toast} adminSessions={adminSessions}/>;
   }
@@ -4491,7 +4841,7 @@ export default function App() {
         `}</style>
 
         <div className="app-tabbar-wrap">
-          {page !== "admin-create" && page !== "admin-edit" && !analyticsSession && !reviewsSession && (
+          {page !== "admin-create" && page !== "admin-edit" && !analyticsSession && !reviewsSession && !commentsOpen && (
             <TabBar
               active={activePage}
               onChange={nav}
@@ -4517,7 +4867,7 @@ export default function App() {
       </div>
 
       {/* Mobile bottom nav */}
-      {!analyticsSession && !reviewsSession && (
+      {!analyticsSession && !reviewsSession && !commentsOpen && (
         <div className="app-bottom-nav" style={{ display:"none" }}>
           <LimelightBottomNav
             active={activePage}
