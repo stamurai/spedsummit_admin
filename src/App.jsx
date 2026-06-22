@@ -1709,14 +1709,14 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                 </div>
                 <div style={{ display:"flex", gap:6, flexShrink:0 }}>
                   <div style={{ position:"relative" }}>
-                    <button onClick={(e)=>{ const r=e.currentTarget.getBoundingClientRect(); setMenuPos({top:r.bottom+4,right:window.innerWidth-r.right}); setMenuOpenId(menuOpenId===s.id?null:s.id); }} aria-label="More options"
+                    <button onClick={(e)=>{ const r=e.currentTarget.getBoundingClientRect(); const spaceBelow=window.innerHeight-r.bottom; setMenuPos({top: spaceBelow>180 ? r.bottom+4 : null, bottom: spaceBelow<=180 ? window.innerHeight-r.top+4 : null, right:window.innerWidth-r.right}); setMenuOpenId(menuOpenId===s.id?null:s.id); }} aria-label="More options"
                       style={{ width:28,height:28,borderRadius:8,border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
                       <Icon name="dots-three-vertical" size={14} color={C.gray500}/>
                     </button>
                     {menuOpenId===s.id && (
                       <>
                         <div onClick={()=>setMenuOpenId(null)} style={{ position:"fixed",inset:0,zIndex:199 }}/>
-                        <div style={{ position:"fixed", right:menuPos.right, top:menuPos.top, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200 }}>
+                        <div style={{ position:"fixed", right:menuPos.right, top:menuPos.top??undefined, bottom:menuPos.bottom??undefined, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200 }}>
                           {[
                             { icon:"pencil-simple",  label:"Edit Session", action:()=>{ onEditSession(s); setMenuOpenId(null); } },
                             { icon: s.status==="LIVE" ? "file" : "play-circle", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
