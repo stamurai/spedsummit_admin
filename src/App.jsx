@@ -1950,7 +1950,6 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
   const [showRange,    setShowRange]    = useState(false);
   const [views,        setViews]        = useState([]);
   const [loading,      setLoading]      = useState(true);
-  const [activeMetric, setActiveMetric] = useState("views");
 
   const RANGES = [
     { key:"7d",  label:"Last 7 days"  },
@@ -2083,30 +2082,26 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
       {/* Unified metric + chart card */}
       {(() => {
         const METRICS = [
-          { key:"views",      label:"Total Views",      val: loading?"—":stat.views.toLocaleString(),       color:C.primary   },
-          { key:"watch",      label:"Watch Time (hrs)", val: loading?"—":stat.watch.toLocaleString(),       color:"#10b981"   },
-          { key:"completion", label:"Completion Rate",  val: loading?"—":`${stat.completion}%`,             color:"#f59e0b"   },
-          { key:"sessions",   label:"Total Sessions",   val: loading?"—":sessions.length.toLocaleString(),  color:"#8b5cf6"   },
+          { label:"Total Views",      val: loading?"—":stat.views.toLocaleString()      },
+          { label:"Watch Time (hrs)", val: loading?"—":stat.watch.toLocaleString()      },
+          { label:"Completion Rate",  val: loading?"—":`${stat.completion}%`            },
+          { label:"Total Sessions",   val: loading?"—":sessions.length.toLocaleString() },
         ];
-        const active   = METRICS.find(m => m.key === activeMetric);
-        const hasData  = trend.some(d => (d[activeMetric] || 0) > 0);
+        const hasData = trend.some(d => d.views > 0);
         return (
           <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, marginBottom:14, overflow:"hidden" }}>
-            {/* Metric tabs row */}
+            {/* Metric row */}
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)" }}>
               {METRICS.map((m, idx) => (
-                <button key={m.key} onClick={() => setActiveMetric(m.key)}
+                <div key={m.label}
                   style={{
-                    all:"unset", cursor:"pointer", padding:"16px 20px", boxSizing:"border-box",
-                    borderTop: `3px solid ${activeMetric===m.key ? m.color : "transparent"}`,
+                    padding:"16px 20px",
                     borderBottom: `1px solid ${C.gray100}`,
                     borderRight: idx < 3 ? `1px solid ${C.gray100}` : "none",
-                    background: activeMetric===m.key ? `${m.color}08` : "transparent",
-                    transition: "border-top-color .15s, background .15s",
                   }}>
                   <div style={{ fontSize:11, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:6 }}>{m.label}</div>
-                  <div style={{ fontSize:22, fontWeight:900, color:activeMetric===m.key ? m.color : C.gray900, lineHeight:1 }}>{m.val}</div>
-                </button>
+                  <div style={{ fontSize:22, fontWeight:900, color:C.gray900, lineHeight:1 }}>{m.val}</div>
+                </div>
               ))}
             </div>
             {/* Chart */}
@@ -2114,22 +2109,22 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
               {!hasData ? (
                 <div style={{ height:160, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
                   <Icon name="chart-line" size={28} color={C.gray300}/>
-                  <div style={{ fontSize:13, color:C.gray400 }}>No data yet in this period</div>
+                  <div style={{ fontSize:13, color:C.gray400 }}>No views yet in this period</div>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={160}>
                   <AreaChart data={trend} margin={{ top:8, right:4, left:-20, bottom:4 }}>
                     <defs>
-                      <linearGradient id={`aa-g-${activeMetric}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor={active.color} stopOpacity={0.18}/>
-                        <stop offset="95%" stopColor={active.color} stopOpacity={0}/>
+                      <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%"  stopColor={C.primary} stopOpacity={0.18}/>
+                        <stop offset="95%" stopColor={C.primary} stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke={C.gray100} vertical={false}/>
                     <XAxis dataKey="label" tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} interval="preserveStartEnd"/>
                     <YAxis tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} allowDecimals={false}/>
-                    <Tooltip contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif" }} labelStyle={{ fontWeight:700, color:C.gray900 }} itemStyle={{ color:active.color }}/>
-                    <Area type="monotone" dataKey={activeMetric} stroke={active.color} strokeWidth={2.5} fill={`url(#aa-g-${activeMetric})`} dot={false} activeDot={{ r:5, fill:active.color, stroke:C.white, strokeWidth:2 }}/>
+                    <Tooltip contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif" }} labelStyle={{ fontWeight:700, color:C.gray900 }} itemStyle={{ color:C.primary }}/>
+                    <Area type="monotone" dataKey="views" stroke={C.primary} strokeWidth={2.5} fill="url(#aa-grad)" dot={false} activeDot={{ r:5, fill:C.primary, stroke:C.white, strokeWidth:2 }}/>
                   </AreaChart>
                 </ResponsiveContainer>
               )}
