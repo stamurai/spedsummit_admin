@@ -2106,26 +2106,45 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
               ))}
             </div>
             {/* Chart */}
-            <div style={{ padding:"16px 16px 12px" }}>
+            <div style={{ padding:"12px 8px 8px" }}>
               {!hasData ? (
-                <div style={{ height:160, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
+                <div style={{ height:180, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
                   <Icon name="chart-line" size={28} color={C.gray300}/>
                   <div style={{ fontSize:13, color:C.gray400 }}>No views yet in this period</div>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={160}>
-                  <AreaChart data={trend} margin={{ top:8, right:4, left:-20, bottom:4 }}>
+                <ResponsiveContainer width="100%" height={180}>
+                  <AreaChart data={trend} margin={{ top:8, right:16, left:0, bottom:0 }}>
                     <defs>
                       <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor={C.primary} stopOpacity={0.18}/>
+                        <stop offset="5%"  stopColor={C.primary} stopOpacity={0.15}/>
                         <stop offset="95%" stopColor={C.primary} stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke={C.gray100} vertical={false}/>
-                    <XAxis dataKey="label" tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} interval="preserveStartEnd"/>
-                    <YAxis tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} allowDecimals={false}/>
-                    <Tooltip contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif" }} labelStyle={{ fontWeight:700, color:C.gray900 }} itemStyle={{ color:C.primary }}/>
-                    <Area type="monotone" dataKey="views" stroke={C.primary} strokeWidth={2.5} fill="url(#aa-grad)" dot={false} activeDot={{ r:5, fill:C.primary, stroke:C.white, strokeWidth:2 }}/>
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize:11, fill:C.gray400, fontFamily:"Inter,sans-serif" }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval={Math.ceil(trend.length / 6) - 1}
+                      tickMargin={8}
+                    />
+                    <YAxis
+                      tick={{ fontSize:11, fill:C.gray400, fontFamily:"Inter,sans-serif" }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                      tickCount={5}
+                      width={28}
+                    />
+                    <Tooltip
+                      contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif", boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}
+                      labelStyle={{ fontWeight:700, color:C.gray900, marginBottom:2 }}
+                      itemStyle={{ color:C.primary }}
+                      cursor={{ stroke:C.gray200, strokeWidth:1 }}
+                    />
+                    <Area type="monotone" dataKey="views" stroke={C.primary} strokeWidth={2} fill="url(#aa-grad)" dot={false} activeDot={{ r:4, fill:C.primary, stroke:C.white, strokeWidth:2 }}/>
                   </AreaChart>
                 </ResponsiveContainer>
               )}
