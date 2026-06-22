@@ -2619,9 +2619,9 @@ function AllCommentsPage({ onBack }) {
   }
 
   return (
-    <div style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
+    <div style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif", letterSpacing:"normal", WebkitFontSmoothing:"antialiased" }}>
       <style>{`
-        .ac-wrap { padding:20px 24px; }
+        .ac-wrap { padding:20px 24px; letter-spacing: normal; }
         .ac-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
         .ac-row { display:grid; grid-template-columns:36px 1fr 150px 110px 80px 36px; gap:16px; align-items:center; padding:12px 16px; transition:background .12s; cursor:default; }
         .ac-row:hover { background:${C.gray50}; }
@@ -2659,14 +2659,14 @@ function AllCommentsPage({ onBack }) {
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:18, gap:12, flexWrap:"wrap" }}>
           <div>
-            <h1 style={{ margin:"0 0 3px", fontSize:20, fontWeight:500, color:C.gray900, letterSpacing:-0.2 }}>Comments</h1>
-            <div style={{ fontSize:13, color:C.gray500 }}>All session comments and reviews across the platform</div>
+            <h1 style={{ margin:"0 0 3px", fontSize:22, fontWeight:700, color:C.gray900, letterSpacing:-0.3, lineHeight:1.25 }}>Comments</h1>
+            <div style={{ fontSize:13, color:C.gray500, fontWeight:400 }}>All session comments and reviews across the platform</div>
           </div>
           <div style={{ position:"relative" }}>
             <button onClick={() => setShowRange(v => !v)}
               style={{ display:"flex", alignItems:"center", gap:6, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:8, padding:"7px 11px", cursor:"pointer", fontFamily:"inherit" }}>
               <Icon name="calendar" size={14} color={C.gray500}/>
-              <span style={{ fontSize:13, fontWeight:500, color:C.gray700 }}>{activeRange.label}</span>
+              <span style={{ fontSize:13, fontWeight:600, color:C.gray900 }}>{activeRange.label}</span>
               <Icon name="caret-down" size={12} color={C.gray400}/>
             </button>
             {showRange && (
@@ -2694,8 +2694,8 @@ function AllCommentsPage({ onBack }) {
                 <Icon name={m.icon} size={17} color={m.iconColor}/>
               </div>
               <div>
-                <div style={{ fontSize:22, fontWeight:500, color:C.gray900, lineHeight:1.1 }}>{loading ? "—" : m.val}</div>
-                <div style={{ fontSize:12, color:C.gray500, marginTop:1 }}>{m.label}</div>
+                <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{loading ? "—" : m.val}</div>
+                <div style={{ fontSize:12, fontWeight:600, color:C.gray500 }}>{m.label}</div>
               </div>
             </div>
           ))}
@@ -2713,7 +2713,7 @@ function AllCommentsPage({ onBack }) {
           <div style={{ display:"inline-flex", background:C.gray100, borderRadius:8, padding:3, gap:0 }}>
             {[["all","All"],["comment","Comments"],["review","Reviews"]].map(([key, label]) => (
               <button key={key} onClick={() => setTypeFilter(key)}
-                style={{ padding:"5px 14px", borderRadius:6, border:"none", background:typeFilter===key ? C.white : "transparent", color:typeFilter===key ? C.gray900 : C.gray500, fontSize:13, fontWeight:typeFilter===key ? 500 : 400, cursor:"pointer", fontFamily:"inherit", boxShadow:typeFilter===key ? "0 1px 3px rgba(0,0,0,0.08)" : "none", transition:"all .12s" }}>
+                style={{ padding:"5px 14px", borderRadius:6, border:"none", background:typeFilter===key ? C.white : "transparent", color:typeFilter===key ? C.gray900 : C.gray600, fontSize:13, fontWeight:typeFilter===key ? 700 : 500, cursor:"pointer", fontFamily:"inherit", boxShadow:typeFilter===key ? "0 1px 3px rgba(0,0,0,0.08)" : "none", transition:"all .12s" }}>
                 {label}
               </button>
             ))}
@@ -2766,7 +2766,7 @@ function AllCommentsPage({ onBack }) {
                 disabled={filtered.length === 0}/>
             </div>
             {[["Comment"],["Author","ac-col-author"],["Type"],["Date","ac-col-date"],[""]].map(([h, cls], i) => (
-              <div key={i} className={cls||""} style={{ fontSize:11, fontWeight:500, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>{h}</div>
+              <div key={i} className={cls||""} style={{ fontSize:11, fontWeight:700, color:C.gray400, letterSpacing:.5, textTransform:"uppercase" }}>{h}</div>
             ))}
           </div>
 
