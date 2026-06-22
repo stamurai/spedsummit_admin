@@ -2015,7 +2015,7 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
     const mins = Math.floor(avgWatched / 60);
     const secs = Math.round(avgWatched % 60);
     return { ...s, views: sv.length, avgDuration: `${mins}:${String(secs).padStart(2,"0")}`, avgPct: `${avgPct}%` };
-  }).sort((a, b) => b.views - a.views).slice(0, 4);
+  }).sort((a, b) => b.views - a.views);
 
   const stat = { views: totalViews, watch: watchHrs, completion: completionPct };
 
