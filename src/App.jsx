@@ -1597,6 +1597,7 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
 function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [], setAdminSessions }) {
   const [filter, setFilter] = useState("ALL");
   const [menuOpenId, setMenuOpenId] = useState(null);
+  const [menuPos,    setMenuPos]    = useState({ top:0, right:0 });
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const statuses = ["ALL", "LIVE", "DRAFT", "ARCHIVED"];
   const filtered = filter === "ALL" ? adminSessions :
@@ -1708,14 +1709,14 @@ function AdminSessionsPage({ onNavigate, onEditSession, toast, adminSessions = [
                 </div>
                 <div style={{ display:"flex", gap:6, flexShrink:0 }}>
                   <div style={{ position:"relative" }}>
-                    <button onClick={()=>setMenuOpenId(menuOpenId===s.id?null:s.id)} aria-label="More options"
+                    <button onClick={(e)=>{ const r=e.currentTarget.getBoundingClientRect(); setMenuPos({top:r.bottom+4,right:window.innerWidth-r.right}); setMenuOpenId(menuOpenId===s.id?null:s.id); }} aria-label="More options"
                       style={{ width:28,height:28,borderRadius:8,border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`,background:C.white,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>
                       <Icon name="dots-three-vertical" size={14} color={C.gray500}/>
                     </button>
                     {menuOpenId===s.id && (
                       <>
                         <div onClick={()=>setMenuOpenId(null)} style={{ position:"fixed",inset:0,zIndex:199 }}/>
-                        <div style={{ position:"absolute", right:0, top:34, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200, overflow:"visible" }}>
+                        <div style={{ position:"fixed", right:menuPos.right, top:menuPos.top, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:200 }}>
                           {[
                             { icon:"pencil-simple",  label:"Edit Session", action:()=>{ onEditSession(s); setMenuOpenId(null); } },
                             { icon: s.status==="LIVE" ? "file" : "play-circle", label: s.status==="LIVE" ? "Set as Draft" : "Publish",
@@ -1945,10 +1946,11 @@ function MiniBarChart48({ data }) {
 }
 
 function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionReviews, onOpenComments, onOpenLiveVisitors, sessions = [] }) {
-  const [range,     setRange]     = useState("28d");
-  const [showRange, setShowRange] = useState(false);
-  const [views,     setViews]     = useState([]);
-  const [loading,   setLoading]   = useState(true);
+  const [range,        setRange]        = useState("28d");
+  const [showRange,    setShowRange]    = useState(false);
+  const [views,        setViews]        = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [activeMetric, setActiveMetric] = useState("views");
 
   const RANGES = [
     { key:"7d",  label:"Last 7 days"  },
@@ -1998,12 +2000,22 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
   const trend = Array.from({ length: buckets }, (_, i) => {
     const bucketStart = new Date(Date.now() - (days - i * bucketSize) * 86400000);
     const bucketEnd   = new Date(Date.now() - (days - (i + 1) * bucketSize) * 86400000);
-    const count = views.filter(r => {
+    const bv = views.filter(r => {
       const d = new Date(r.created_at);
       return d >= bucketStart && d < bucketEnd;
-    }).length;
+    });
+    const bSessions = sessions.filter(s => {
+      const d = new Date(s.created_at);
+      return d >= bucketStart && d < bucketEnd;
+    });
     const label = bucketStart.toLocaleDateString("en-US", { month:"short", day:"numeric" });
-    return { v: count, label };
+    return {
+      label,
+      views:      bv.length,
+      watch:      Math.round(bv.reduce((s, r) => s + (r.watched_seconds || 0), 0) / 360) / 10,
+      completion: bv.length > 0 ? Math.round((bv.filter(r => r.completed).length / bv.length) * 100) : 0,
+      sessions:   bSessions.length,
+    };
   });
 
   // Per-session stats
@@ -2022,17 +2034,15 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
   return (
     <div className="aa-wrap" style={{ background:C.gray50, minHeight:"100%", fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
       <style>{`
-        .aa-wrap    { padding:24px; }
-        .aa-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
-        .aa-metrics > div { height:130px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; border-radius:14px !important; }
-        .aa-bottom  { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .aa-wrap   { padding:24px; }
+        .aa-bottom { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
         .aa-header  { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:10px; }
         @media(max-width:640px){
-          .aa-wrap    { padding:16px 12px; }
-          .aa-metrics { grid-template-columns:repeat(2,1fr); gap:10px; }
-          .aa-bottom  { grid-template-columns:1fr; }
-          .aa-header  { flex-direction:row; align-items:center; }
+          .aa-wrap   { padding:16px 12px; }
+          .aa-bottom { grid-template-columns:1fr; }
+          .aa-header { flex-direction:row; align-items:center; }
           .aa-header h1 { font-size:17px !important; }
+          .aa-metric-tabs { grid-template-columns:repeat(2,1fr) !important; }
         }
       `}</style>
 
@@ -2070,78 +2080,60 @@ function AnalyticsPage({ onEditSession, onOpenSessionAnalytics, onOpenSessionRev
         </div>
       </div>
 
-      {/* Metric cards */}
-      <div className="aa-metrics">
-        {[
-          { label:"Total Views",      val: loading ? "—" : stat.views.toLocaleString()      },
-          { label:"Watch Time (hrs)", val: loading ? "—" : stat.watch.toLocaleString()      },
-          { label:"Completion Rate",  val: loading ? "—" : `${stat.completion}%`            },
-          { label:"Total Sessions",   val: loading ? "—" : sessions.length.toLocaleString() },
-        ].map(m => (
-          <div key={m.label} style={{ background:C.white, borderRadius:14, border:`1px solid ${C.gray200}`, padding:"16px" }}>
-            <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{m.val}</div>
-            <div style={{ fontSize:13, fontWeight:600, color:C.gray600, lineHeight:1.5 }}>{m.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Activity Chart Card */}
-      <style>{`
-        @keyframes aa-bar-grow { from { transform:scaleY(0); opacity:0; } to { transform:scaleY(1); opacity:1; } }
-        .aa-bar { transform-origin:bottom; animation:aa-bar-grow 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
-        .aa-bar:nth-child(1){ animation-delay:0.00s; } .aa-bar:nth-child(2){ animation-delay:0.07s; }
-        .aa-bar:nth-child(3){ animation-delay:0.14s; } .aa-bar:nth-child(4){ animation-delay:0.21s; }
-        .aa-bar:nth-child(5){ animation-delay:0.28s; } .aa-bar:nth-child(6){ animation-delay:0.35s; }
-        .aa-bar:nth-child(7){ animation-delay:0.42s; }
-        .aa-bar-wrap:hover .aa-bar-tooltip { opacity:1; transform:translateY(0); }
-        .aa-bar-tooltip { opacity:0; transform:translateY(4px); transition:all .15s; pointer-events:none; }
-        .aa-chart-desktop { display:flex; flex-direction:row; align-items:stretch; gap:0; }
-        .aa-chart-mobile  { display:none; }
-        .aa-chart-stat { width:160px; flex-shrink:0; border-right:1px solid; padding-right:24px; margin-right:24px; display:flex; flex-direction:column; justify-content:center; }
-        .aa-chart-line { flex:1; min-width:0; }
-        @media(max-width:640px){
-          .aa-chart-desktop { display:none !important; }
-          .aa-chart-mobile  { display:flex !important; flex-direction:column; gap:16px; }
-          .aa-chart-stat-m  { width:100%; border-bottom:1px solid; padding-bottom:14px; margin-bottom:0; flex-direction:row; align-items:center; justify-content:space-between; display:flex; }
-        }
-      `}</style>
+      {/* Unified metric + chart card */}
       {(() => {
-        const chartData = trend.map(d => ({ label: d.label, views: d.v }));
-        const hasData   = chartData.some(d => d.views > 0);
+        const METRICS = [
+          { key:"views",      label:"Total Views",      val: loading?"—":stat.views.toLocaleString(),       color:C.primary   },
+          { key:"watch",      label:"Watch Time (hrs)", val: loading?"—":stat.watch.toLocaleString(),       color:"#10b981"   },
+          { key:"completion", label:"Completion Rate",  val: loading?"—":`${stat.completion}%`,             color:"#f59e0b"   },
+          { key:"sessions",   label:"Total Sessions",   val: loading?"—":sessions.length.toLocaleString(),  color:"#8b5cf6"   },
+        ];
+        const active   = METRICS.find(m => m.key === activeMetric);
+        const hasData  = trend.some(d => (d[activeMetric] || 0) > 0);
         return (
-          <div style={{ width:"100%", background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, padding:"20px 20px 16px", marginBottom:14 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
-              <div>
-                <div style={{ fontSize:15, fontWeight:700, color:C.gray900 }}>Views over time</div>
-                <div style={{ fontSize:12, color:C.gray400, marginTop:2 }}>{activeRange.label}</div>
-              </div>
-              <div style={{ textAlign:"right" }}>
-                <div style={{ fontSize:32, fontWeight:900, color:C.gray900, lineHeight:1, letterSpacing:-1 }}>{loading ? "—" : stat.views.toLocaleString()}</div>
-                <div style={{ fontSize:12, color:C.gray500, marginTop:3 }}>total views</div>
-              </div>
+          <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gray200}`, marginBottom:14, overflow:"hidden" }}>
+            {/* Metric tabs row */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)" }}>
+              {METRICS.map((m, idx) => (
+                <button key={m.key} onClick={() => setActiveMetric(m.key)}
+                  style={{
+                    all:"unset", cursor:"pointer", padding:"16px 20px", boxSizing:"border-box",
+                    borderTop: `3px solid ${activeMetric===m.key ? m.color : "transparent"}`,
+                    borderBottom: `1px solid ${C.gray100}`,
+                    borderRight: idx < 3 ? `1px solid ${C.gray100}` : "none",
+                    background: activeMetric===m.key ? `${m.color}08` : "transparent",
+                    transition: "border-top-color .15s, background .15s",
+                  }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:C.gray500, letterSpacing:.5, textTransform:"uppercase", marginBottom:6 }}>{m.label}</div>
+                  <div style={{ fontSize:22, fontWeight:900, color:activeMetric===m.key ? m.color : C.gray900, lineHeight:1 }}>{m.val}</div>
+                </button>
+              ))}
             </div>
-            {!hasData ? (
-              <div style={{ height:180, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
-                <Icon name="chart-line" size={28} color={C.gray300}/>
-                <div style={{ fontSize:13, color:C.gray400 }}>No views yet in this period</div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={chartData} margin={{ top:16, right:8, left:-20, bottom:8 }}>
-                  <defs>
-                    <linearGradient id="aa-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={C.primary} stopOpacity={0.18}/>
-                      <stop offset="95%" stopColor={C.primary} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={C.gray100} vertical={false}/>
-                  <XAxis dataKey="label" tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} interval="preserveStartEnd"/>
-                  <YAxis tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} allowDecimals={false}/>
-                  <Tooltip contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif" }} labelStyle={{ fontWeight:700, color:C.gray900 }} itemStyle={{ color:C.primary }}/>
-                  <Area type="monotone" dataKey="views" stroke={C.primary} strokeWidth={2.5} fill="url(#aa-grad)" dot={false} activeDot={{ r:5, fill:C.primary, stroke:C.white, strokeWidth:2 }}/>
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+            {/* Chart */}
+            <div style={{ padding:"16px 16px 12px" }}>
+              {!hasData ? (
+                <div style={{ height:160, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, borderRadius:10, background:C.gray50 }}>
+                  <Icon name="chart-line" size={28} color={C.gray300}/>
+                  <div style={{ fontSize:13, color:C.gray400 }}>No data yet in this period</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={160}>
+                  <AreaChart data={trend} margin={{ top:8, right:4, left:-20, bottom:4 }}>
+                    <defs>
+                      <linearGradient id={`aa-g-${activeMetric}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%"  stopColor={active.color} stopOpacity={0.18}/>
+                        <stop offset="95%" stopColor={active.color} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.gray100} vertical={false}/>
+                    <XAxis dataKey="label" tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} interval="preserveStartEnd"/>
+                    <YAxis tick={{ fontSize:10, fill:C.gray400, fontFamily:"Inter,sans-serif" }} axisLine={false} tickLine={false} allowDecimals={false}/>
+                    <Tooltip contentStyle={{ borderRadius:8, border:`1px solid ${C.gray200}`, fontSize:12, fontFamily:"Inter,sans-serif" }} labelStyle={{ fontWeight:700, color:C.gray900 }} itemStyle={{ color:active.color }}/>
+                    <Area type="monotone" dataKey={activeMetric} stroke={active.color} strokeWidth={2.5} fill={`url(#aa-g-${activeMetric})`} dot={false} activeDot={{ r:5, fill:active.color, stroke:C.white, strokeWidth:2 }}/>
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
         );
       })()}
