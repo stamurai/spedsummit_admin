@@ -1454,6 +1454,7 @@ function TabBar({ active, onChange, isAdmin, breadcrumbs }) {
 
 function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] }) {
   const [menuOpenId, setMenuOpenId] = useState(null);
+  const [menuPos,    setMenuPos]    = useState({ top:0, bottom:null, right:0 });
   const [metrics, setMetrics] = useState({ enrollments:null, videoViews:null, certificates:null, comments:null });
 
   useEffect(() => {
@@ -1536,14 +1537,14 @@ function AdminOverview({ onNavigate, onEditSession, toast, adminSessions = [] })
                   </div>
                 </div>
                 <div style={{ position:"relative" }}>
-                  <button onClick={()=>setMenuOpenId(menuOpenId===s.id?null:s.id)} title="More options"
+                  <button onClick={(e)=>{ const r=e.currentTarget.getBoundingClientRect(); const spaceBelow=window.innerHeight-r.bottom; setMenuPos({top: spaceBelow>120?r.bottom+4:null, bottom: spaceBelow<=120?window.innerHeight-r.top+4:null, right:window.innerWidth-r.right}); setMenuOpenId(menuOpenId===s.id?null:s.id); }} title="More options"
                     style={{ width:28, height:28, borderRadius:7, border:`1px solid ${menuOpenId===s.id?C.primary:C.gray200}`, background:C.white, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                     <Icon name="dots-three-vertical" size={18} color={C.gray700}/>
                   </button>
                   {menuOpenId===s.id && (
                     <>
                       <div onClick={()=>setMenuOpenId(null)} style={{ position:"fixed",inset:0,zIndex:199 }}/>
-                      <div style={{ position:"absolute", right:0, top:30, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:180, overflow:"hidden" }}>
+                      <div style={{ position:"fixed", right:menuPos.right, top:menuPos.top??undefined, bottom:menuPos.bottom??undefined, background:C.white, border:`1px solid ${C.gray200}`, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.14)", zIndex:200, minWidth:180 }}>
                         {[
                           { icon:"pencil-simple", label:"Edit Session", action:()=>{ onEditSession?.(s); setMenuOpenId(null); } },
                           { icon:"trash", label:"Delete", danger:true, action:()=>{ setMenuOpenId(null); toast({type:"info", message:"Go to My Sessions to delete."}); } },
