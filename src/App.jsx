@@ -2689,14 +2689,9 @@ function AllCommentsPage({ onBack }) {
             { label:"Session comments",  val:totalComments, icon:"chat-circle",  iconColor:"#0F6E56",  bg:"#E1F5EE"       },
             { label:"Reviews",           val:totalReviews,  icon:"star",         iconColor:"#854F0B",  bg:"#FAEEDA"       },
           ].map(m => (
-            <div key={m.label} style={{ background:C.white, borderRadius:10, border:`1px solid ${C.gray100}`, padding:"12px 14px", display:"flex", alignItems:"center", gap:12 }}>
-              <div style={{ width:36, height:36, borderRadius:8, background:m.bg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <Icon name={m.icon} size={17} color={m.iconColor}/>
-              </div>
-              <div>
-                <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{loading ? "—" : m.val}</div>
-                <div style={{ fontSize:12, fontWeight:600, color:C.gray500 }}>{m.label}</div>
-              </div>
+            <div key={m.label} style={{ background:C.white, borderRadius:10, border:`1px solid ${C.gray100}`, padding:"16px 18px" }}>
+              <div style={{ fontSize:26, fontWeight:900, color:C.gray900, lineHeight:1, marginBottom:4 }}>{loading ? "—" : m.val}</div>
+              <div style={{ fontSize:12, fontWeight:600, color:C.gray500 }}>{m.label}</div>
             </div>
           ))}
         </div>
