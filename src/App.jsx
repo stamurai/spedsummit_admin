@@ -5130,9 +5130,16 @@ export default function App() {
       });
 
       const rows = data || [];
+      const now = new Date();
+      const visibleRows = rows.filter(s => {
+        if (s.status !== "LIVE") return false;
+        if (s.available_from && now < new Date(s.available_from)) return false;
+        if (s.available_to   && now > new Date(s.available_to))   return false;
+        return true;
+      });
 
       setSessions(prev => {
-        return rows.map(s => {
+        return visibleRows.map(s => {
           const existing = prev.find(p => p.id === s.id);
           return { ...toSession(s), progress: existing?.progress || 0, status: existing?.status || "not-started" };
         });
